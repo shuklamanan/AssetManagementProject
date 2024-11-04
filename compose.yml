@@ -1,0 +1,31 @@
+version: '1.0'
+services:
+  frontend:
+    build: ./frontend
+    container_name: client_frontend
+    ports:
+      - 5173:5173
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    container_name: api_backend
+    ports:
+      - 5001:5001
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: money-orders
+    ports:
+      - 9000:5432
+    volumes:
+      - pgAssetManagement:/var/lib/postgresql/data
+
+volumes:
+  pgAssetManagement:

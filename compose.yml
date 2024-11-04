@@ -21,7 +21,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: money-orders
+      POSTGRES_DB: asset-management
     ports:
       - 9000:5432
     volumes:

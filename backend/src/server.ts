@@ -1,16 +1,16 @@
 import express from 'express';
-import http from "http";
+import cors from 'cors';
+import dotenv from 'dotenv'
+import {userRoutes} from './routes/user.ts';
 
+
+dotenv.config()
 const app = express();
+app.use(cors());
+app.use(express.json());
 
-// PORT
-const PORT = 5001;
-
-// This is only Test route
-app.get('/', (req, res) => {
-    res.send('Hello Interns!!')
-});
-
-http.createServer(app).listen(PORT, () => {
-    return console.log(`Express is listening at http://localhost:${PORT}`);
-});
+app.use('/users', userRoutes);
+const port = process.env.BACKEND_PORT || 5000
+app.listen(port, () =>
+    console.log(`Server is live @ `+port)
+);

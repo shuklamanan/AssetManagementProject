@@ -1,0 +1,19 @@
+.h-custom {
+    height: calc(100% - 73px);
+}
+@media (max-width: 450px) {
+    .h-custom {
+        height: 100%;
+    }
+}
+
+.register-image{
+    position: relative;
+    top: 25%;
+    left: 25%;
+    width: 50%;
+}
+
+.register-btn, .login-link, .form-header{
+    margin:auto;
+}

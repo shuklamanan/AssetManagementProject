@@ -1,4 +1,4 @@
-interface bodyStructure{
+interface IBodyStructureForAPI{
     username : string,
     password : string,
 }
@@ -8,12 +8,11 @@ const commonHeaders  : HeadersInit =  {
     "Content-Type": "application/json",
     "Access-Control-Origin": "*"
 }
-console.log(localStorage.getItem("token"));
 if (localStorage.getItem("token")!=null) {
     window.location.href = "/src/html/index.html"
 }
 
-async function postRequest(api:string,body:bodyStructure): Promise<void>{
+async function postRequest(api:string,body:IBodyStructureForAPI): Promise<void>{
     const res : Response = await fetch(api, {
         method:"POST",
         headers:commonHeaders,
@@ -25,27 +24,20 @@ async function postRequest(api:string,body:bodyStructure): Promise<void>{
         alert(data.message)
         return;
     }
-    console.log(data);
     if(data.token){
         localStorage.setItem('token', data.token);
         window.location.href = "/src/html/index.html";
     }
 }
-console.log("**********");
-document.querySelector('#login')?.addEventListener("click", async (e : Event) :Promise<void> => {
+const loginForm : HTMLFormElement = <HTMLFormElement>document.getElementById('loginForm');
+loginForm.addEventListener("submit", async (e: Event): Promise<void> => {
     e.preventDefault();
-    console.log("*********");
-    const username : string = (<HTMLInputElement>document.getElementById('username'))!.value;
-    const password :string = (<HTMLInputElement>document.getElementById('password'))!.value;
-
-    // (<HTMLInputElement>document.getElementById('email')).value = "";
-    // (<HTMLInputElement>document.getElementById('password')).value = "";
-
-    console.log(username, password);
-    const registerApi : string = commonApi + "users/login";
-    const body = {
-        username : username,
-        password : password
-    }
-    await postRequest(registerApi,body);
-})
+    const formData: FormData = new FormData(loginForm);
+    const formValues : Object = Object.fromEntries(formData);
+    const registerApi: string = commonApi + "users/login";
+    const body : IBodyStructureForAPI = {
+        username:formValues.username,
+        password:formValues.password
+    };
+    await postRequest(registerApi, body);
+});

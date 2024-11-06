@@ -1,4 +1,4 @@
-interface IBodyStructure{
+interface IBodyStructureForAPI{
     username : string,
     firstName : string,
     lastName : string,
@@ -8,18 +8,16 @@ interface IBodyStructure{
     dateOfBirth : string,
 }
 
-const commonApi = "http://localhost:5001/";
+const commonApi : string = "http://localhost:5001/";
 const commonHeaders  : HeadersInit =  {
     "Content-Type": "application/json",
     "Access-Control-Origin": "*"
 }
-console.log("file called");
 if (localStorage.getItem("token")) {
-    console.log("hello");
     window.location.href = "/src/html/index.html"
 }
 
-async function postRequest(api:string,body:bodyStructure):Promise<void>{
+async function postRequest(api:string,body:IBodyStructureForAPI):Promise<void>{
     const res : Response  = await fetch(api, {
         method:"POST",
         headers:commonHeaders,
@@ -32,40 +30,24 @@ async function postRequest(api:string,body:bodyStructure):Promise<void>{
     }
     window.location.href = "src/html/login.html";
 }
-
-const registerButton : HTMLButtonElement = <HTMLButtonElement>document.getElementById("register");
-registerButton?.addEventListener("click", async(e : Event) :Promise<void> => {
+const registrationForm: HTMLFormElement = <HTMLFormElement>document.getElementById("registrationForm");
+registrationForm.addEventListener("submit", async(e : Event) :Promise<void> => {
     e.preventDefault();
-    const username : string = (<HTMLInputElement>document.getElementById('username'))!.value;
-    const firstName : string = (<HTMLInputElement>document.getElementById('firstName'))!.value;
-    const lastName : string = (<HTMLInputElement>document.getElementById('lastName'))!.value;
-    const email : string = (<HTMLInputElement>document.getElementById('email'))!.value;
-    const password :string = (<HTMLInputElement>document.getElementById('password'))!.value;
-    const phoneNumber :string = (<HTMLInputElement>document.getElementById('phoneNumber'))!.value;
-    const dateOfBirth :string = (<HTMLInputElement>document.getElementById('dob')).value;
-
-    (<HTMLInputElement>document.getElementById('username'))!.value = "";
-    (<HTMLInputElement>document.getElementById('firstName'))!.value = "";
-    (<HTMLInputElement>document.getElementById('lastName'))!.value = "";
-    (<HTMLInputElement>document.getElementById('email'))!.value = "";
-    (<HTMLInputElement>document.getElementById('password'))!.value = "";
-    (<HTMLInputElement>document.getElementById('phoneNumber'))!.value = "";
-    (<HTMLInputElement>document.getElementById('dob'))!.value = "";
-
-    console.log(firstName,lastName,email, password);
-    if(phoneNumber.length != 10 || parseInt(phoneNumber)<0){
+    const formData:FormData = new FormData(registrationForm);
+    const formValues: Object = Object.fromEntries(formData);
+    if(formValues.phoneNumber.length != 10 || parseInt(formValues.phoneNumber)<0){
         alert("Please enter a valid phone number");
         location.reload();
     }
     const signupApi : string = commonApi + "users/signup";
-    const body = {
-        username : username,
-        firstName : firstName,
-        lastName : lastName,
-        email : email,
-        password : password,
-        phoneNo : parseInt(phoneNumber),
-        dateOfBirth : dateOfBirth,
+    const body:IBodyStructureForAPI = {
+        username : formValues.username,
+        firstName : formValues.firstName,
+        lastName : formValues.lastName,
+        email : formValues.email,
+        password : formValues.password,
+        phoneNo : parseInt(formValues.phoneNumber),
+        dateOfBirth : formValues.dateOfBirth,
     }
     await postRequest(signupApi,body);
 })

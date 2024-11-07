@@ -1,9 +1,9 @@
 import client from "../../postgresConfig.ts"
 import {Request, Response} from "express";
 import {
-    IAsset, ICreateAssetQueryBody, IDecideHolderOfAsset,
+    IAsset, IAssetDeleteOrNot, ICreateAssetQueryBody, IDecideHolderOfAsset,
     IMergeDetailsOfAssetAndUser,
-    IUserAndAsset,
+    IUserAndAsset, IUserAndAssetAndAssetHistory, IUserDeleteOrNot,
 } from "../interfaces/requestWithUser.ts";
 
 
@@ -87,7 +87,7 @@ export const updateAsset = async (req: Request, res: Response): Promise<void> =>
             config,
             userId,
         } = req.body as ICreateAssetQueryBody;
-        await client.query("UPDATE assets SET name = $1 , asset_type = $2, config = $3, user_id=$4 WHERE id=$5", [name, assetType, JSON.stringify(config), userId ?? null, id])
+        await client.query("UPDATE assets SET name = $1 , asset_type = $2, config = $3, user_id=$4 WHERE id=$5 AND archived_at IS NULL", [name, assetType, JSON.stringify(config), userId ?? null, id])
         res.status(200).json({message: "asset updated successfully"});
         return;
     } catch (error: any) {
@@ -100,6 +100,16 @@ export const assetAssign = async (req: Request, res: Response): Promise<void> =>
     try {
         if (!req.body.userId || !req.body.assetId) {
             res.status(400).send({error: "Please enter all required fields"});
+            return;
+        }
+        const assetDeletedOrNot : IAssetDeleteOrNot = await client.query("SELECT 1 AS asset_deleted_or_not FROM assets WHERE id=$1 AND archived_at IS NOT NULL", [req.body.assetId]);
+        const userDeletedOrNot :IUserDeleteOrNot = await client.query("SELECT 1 AS user_deleted_or_not FROM users WHERE id=$1 AND archived_at IS NOT NULL", [req.body.userId]);
+        if(assetDeletedOrNot?.rows[0]?.asset_deleted_or_not) {
+            res.status(201).json({"message": "You can not assign asset because This asset is deleted"});
+            return;
+        }
+        if(userDeletedOrNot?.rows[0]?.user_deleted_or_not){
+            res.status(201).json({"message": "You can not assign asset to this user because This user is deleted"});
             return;
         }
         const response: IDecideHolderOfAsset = await client.query("SELECT 1 AS asset_holder_or_not FROM assets WHERE id=$1 AND user_id IS NOT NULL", [req.body.assetId])
@@ -142,7 +152,7 @@ export const assetUnassign = async (req: Request, res: Response): Promise<void> 
 }
 export const getAssetHistory = async (req: Request, res: Response): Promise<void> => {
     try {
-        const response = await client.query("SELECT ah.user_id, u.username,a.id as asset_id,a.name as asset_name,ah.assigned_at,ah.unassigned_at FROM asset_history ah LEFT JOIN users u  ON u.id = ah.user_id JOIN assets a ON ah.asset_id = a.id ")
+        const response : IUserAndAssetAndAssetHistory = await client.query("SELECT ah.user_id, u.username,a.id as asset_id,a.name as asset_name,ah.assigned_at,ah.unassigned_at FROM asset_history ah LEFT JOIN users u  ON u.id = ah.user_id JOIN assets a ON ah.asset_id = a.id WHERE a.archived_at IS NULL AND u.archived_at IS NULL ")
         res.status(200).json(response?.rows);
         return;
     } catch (error: any) {

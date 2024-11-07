@@ -4,7 +4,7 @@ interface IBodyStructureForAPI{
     lastName : string,
     email : string,
     password : string,
-    phoneNo : number,
+    phoneNumber : number,
     dateOfBirth : string,
 }
 
@@ -28,7 +28,7 @@ async function postRequest(api:string,body:IBodyStructureForAPI):Promise<void>{
         alert(data.message);
         return;
     }
-    window.location.href = "src/html/login.html";
+    window.location.href = "./login.html";
 }
 const registrationForm: HTMLFormElement = <HTMLFormElement>document.getElementById("registrationForm");
 registrationForm.addEventListener("submit", async(e : Event) :Promise<void> => {
@@ -46,7 +46,7 @@ registrationForm.addEventListener("submit", async(e : Event) :Promise<void> => {
         lastName : formValues.lastName,
         email : formValues.email,
         password : formValues.password,
-        phoneNo : parseInt(formValues.phoneNumber),
+        phoneNumber : parseInt(formValues.phoneNumber),
         dateOfBirth : formValues.dateOfBirth,
     }
     await postRequest(signupApi,body);

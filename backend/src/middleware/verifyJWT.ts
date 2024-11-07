@@ -14,7 +14,7 @@ export const verifyJwt = async (req :Request,res:Response,next:NextFunction):Pro
         }
         const payload : JwtPayload = jwt.verify(authToken,process.env.ACCESS_TOKEN_SECRET??"") as JwtPayload
         console.log(payload);
-        const user :IUser =  await client.query('select * from users where id = $1',[payload?.id])
+        const user :IUser =  await client.query('select * from users where id = $1 and archived_at is null',[payload?.id])
         console.log(user)
         if(user.rows.length===0){
              res.status(404).json({message:"user not found"})

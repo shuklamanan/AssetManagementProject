@@ -50,6 +50,7 @@ export const getAllAssets = async (req: Request, res: Response): Promise<void> =
                                                     LEFT JOIN users u ON u.id = a.user_id
                                            WHERE a.archived_at IS NULL
                                              AND u.archived_at IS NULL
+                                          ORDER BY a.id
             `);
         } else {
             response = await client.query(`SELECT a.id,
@@ -66,7 +67,7 @@ export const getAllAssets = async (req: Request, res: Response): Promise<void> =
                                                     LEFT JOIN users u ON u.id = a.user_id
                                            WHERE u.username = $1
                                              AND a.archived_at IS NULL
-                                             AND u.archived_at IS NULL
+                                             AND u.archived_at IS NULL ORDER BY a.id
             `, [req.body.user.username]);
         }
         const allAssets : IMergeDetailsOfAssetAndUser[] | undefined = response?.rows;
@@ -152,7 +153,7 @@ export const assetUnassign = async (req: Request, res: Response): Promise<void> 
 }
 export const getAssetHistory = async (req: Request, res: Response): Promise<void> => {
     try {
-        const response : IUserAndAssetAndAssetHistory = await client.query("SELECT ah.user_id, u.username,a.id as asset_id,a.name as asset_name,ah.assigned_at,ah.unassigned_at FROM asset_history ah LEFT JOIN users u  ON u.id = ah.user_id JOIN assets a ON ah.asset_id = a.id WHERE a.archived_at IS NULL AND u.archived_at IS NULL ")
+        const response : IUserAndAssetAndAssetHistory = await client.query("SELECT ah.user_id, u.username,a.id as asset_id,a.name as asset_name,ah.assigned_at,ah.unassigned_at FROM asset_history ah LEFT JOIN users u  ON u.id = ah.user_id JOIN assets a ON ah.asset_id = a.id WHERE a.archived_at IS NULL AND u.archived_at IS NULL ORDER BY ah.id")
         res.status(200).json(response?.rows);
         return;
     } catch (error: any) {

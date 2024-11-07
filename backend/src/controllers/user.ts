@@ -110,8 +110,8 @@ export const getRoles = async (req: Request, res: Response): Promise<void> => {
 
 export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
     try {
-        const response: IUser = await client.query("SELECT username,first_name,last_name,role,email,phone_number,department,date_of_birth FROM users WHERE archived_at IS NULL ORDER BY role")
-        const allUsers : ICreateUserRequestBody[] = response?.rows;
+        const response: IUser = await client.query("SELECT id,username,first_name,last_name,role,email,phone_number,department,date_of_birth FROM users WHERE archived_at IS NULL ORDER BY role")
+        const allUsers : ICreateUserRequestBody[] | undefined = response?.rows;
         res.status(200).json(allUsers ?? []);
         return;
     } catch (error: any) {

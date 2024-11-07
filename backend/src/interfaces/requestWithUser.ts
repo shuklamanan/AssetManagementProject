@@ -91,10 +91,20 @@ export interface IDecideHolderOfAsset{
     rows: {asset_holder_or_not : number}[]
 }
 
-export interface IMergeDetailsOfAssetAndUserAndAssetHistory extends ICreateAssetRequestBody , ICreateUserRequestBody{
+export interface IUserDeleteOrNot{
+    rows: { user_deleted_or_not: number}[]
+}
+
+export interface IAssetDeleteOrNot{
+    rows: {asset_deleted_or_not : number}[]
+}
+
+export interface IMergeDetailsOfAssetAndUserAndAssetHistory{
     id?: number,
+    user_id : number,
+    username : string,
     asset_id : number,
-    assigned_by : number,
+    asset_name : string,
     assigned_at? : string | Date,
     unassigned_at? : string | Date
 }

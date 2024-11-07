@@ -12,41 +12,90 @@
         <div class="row flex-nowrap">
             <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark">
                 <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
-                    <a href="/" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                    <a href="#"
+                       class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
                         <span class="fs-5 d-none d-sm-inline">Noovosoft</span>
                     </a>
-                    <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
+                    <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start"
+                        id="menu">
                         <li class="nav-item">
-                            <a href="/src/html/profile.html" class="nav-link px-0 align-middle text-white">
-                                <span class="ms-1 d-none d-sm-inline">Profile</span>
+                            <a href="/src/html/index.html" class="nav-link align-middle px-0">
+                                <i class="fs-4 bi-house"></i> <span class="ms-1 d-none d-sm-inline">Assets</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/src/html/index.html" class="nav-link align-middle px-0 text-white">
-                                <span class="ms-1 d-none d-sm-inline">Assets</span>
+                            <a href="/src/html/profile.html" class="nav-link px-0 align-middle">
+                                <i class="fs-4 bi-speedometer2"></i><span class="ms-1 d-none d-sm-inline">Profile</span>
+                            </a>
+                        </li>
+                        <li class="nav-item" id="user-nav">
+                            <a href="/src/html/users.html" class="nav-link px-0 align-middle">
+                                <i class="fs-4 bi-table"></i> <span class="ms-1 d-none d-sm-inline">Users</span>
                             </a>
                         </li>
                     </ul>
                 </div>
             </div>
 
-            <div class="col py-3">
-                <h2 class="pb-4">User Dashboard - Profile</h2>
-                <div class="row">
-                    <div class="col-md-4"><strong>Username:</strong> <span id="username"></span></div>
-                    <div class="col-md-4"><strong>First Name:</strong> <span id="firstName"></span></div>
-                    <div class="col-md-4"><strong>Last Name:</strong> <span id="lastName"></span></div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-md-4"><strong>Email:</strong> <span id="email"></span></div>
-                    <div class="col-md-4"><strong>Department:</strong> <span id="department"></span></div>
-                    <div class="col-md-4"><strong>Phone Number:</strong> <span id="phoneNumber"></span></div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-md-4"><strong>Date of Birth:</strong> <span id="dob"></span></div>
-                </div>
-                <div class="mt-4">
-                    <button class="btn btn-primary" id="editButton">Edit</button>
+            <div class="container">
+                <div class="main-body">
+                    <div class="mb-4"></div>
+                    <div class="row gutters-sm">
+                        <div class="col-md-12">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-sm-3">
+                                            <h6 class="mb-0">username</h6>
+                                        </div>
+                                        <div class="col-sm-9 text-secondary" id="username"></div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-3">
+                                            <h6 class="mb-0">Full Name</h6>
+                                        </div>
+                                        <div class="col-sm-9 text-secondary" id="fullName"></div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-3">
+                                            <h6 class="mb-0">Email</h6>
+                                        </div>
+                                        <div class="col-sm-9 text-secondary" id="email"></div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-3">
+                                            <h6 class="mb-0">Phone</h6>
+                                        </div>
+                                        <div class="col-sm-9 text-secondary" id="phoneNumber"></div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-3">
+                                            <h6 class="mb-0">Date of Birth</h6>
+                                        </div>
+                                        <div class="col-sm-9 text-secondary" id="dob"></div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-3">
+                                            <h6 class="mb-0">Joining Date</h6>
+                                        </div>
+                                        <div class="col-sm-9 text-secondary" id="joiningDate"></div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <a class="btn btn-info " target="__blank" href="#">Edit</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>

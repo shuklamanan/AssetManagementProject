@@ -7,6 +7,7 @@ if (localStorage.getItem("token") === null || localStorage.getItem("token") === 
 function displayContentBasedOnRoles(roles: string[]): void {
     if (!roles.includes('Admin')) {
         document.getElementById("user-nav")!.style.display = "none"
+        document.getElementById("asset-history-nav")!.style.display = "none"
     }
 }
 

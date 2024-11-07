@@ -37,6 +37,7 @@ export interface ICreateUserQueryBody {
     dateOfBirth: Date | string,
     createdAt ?: Date | string,
     archivedAt ?: Date | string,
+    role:string[]
 }
 
 export interface ICreateUserRequestBody {

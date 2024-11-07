@@ -7,15 +7,16 @@ import {
     ICreateUserQueryBody,
     ICreateUserRequestBody,
     ILoginUserRequestBody,
+    IMergeDetailsOfAssetAndUser,
     IUser
 } from "../interfaces/requestWithUser.ts";
 
 dotenv.config()
 
 async function hashPassword(password: string): Promise<string> {
-    const saltRounds : number = 10;
-    return await new Promise((resolve, reject) : void => {
-        bcrypt.hash(password, saltRounds, function (err :Error | undefined, hash : string) {
+    const saltRounds: number = 10;
+    return await new Promise((resolve, reject): void => {
+        bcrypt.hash(password, saltRounds, function (err: Error | undefined, hash: string) {
             if (err) reject(err)
             resolve(hash)
         });
@@ -31,8 +32,8 @@ const generateToken = (payload: JwtPayload) => {
     return jwt.sign(payload, secretKey, options);
 };
 
-function isValidPassword(password: string) : boolean {
-    const regex : RegExp = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\S+$).{8,20}$/;
+function isValidPassword(password: string): boolean {
+    const regex: RegExp = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\S+$).{8,20}$/;
     return regex.test(password);
 }
 
@@ -79,7 +80,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             res.status(400).json({message: "some fields are missing in req"})
             return
         }
-        let response : IUser = await client.query("select * from users where username=$1", [username]);
+        let response: IUser = await client.query("select * from users where username=$1", [username]);
         if (response.rows.length === 0) {
             res.status(404).json({message: "user not found"})
             return
@@ -89,7 +90,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             res.status(401).json({message: "user auth failed incorrect username or password"})
             return
         }
-        let payload : JwtPayload = { id: user.id }
+        let payload: JwtPayload = {id: user.id}
         let token: string = generateToken(payload)
         res.status(200).json({token: token});
         return
@@ -100,7 +101,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 };
 export const getRoles = async (req: Request, res: Response): Promise<void> => {
     try {
-        res.status(200).json({roles: req.body.user.role.substring(1, req.body.user.role.length - 1).split(",")});
+        res.status(200).json(req.body.user.role.substring(1, req.body.user.role.length - 1).split(","));
         return
     } catch (error: any) {
         res.status(500).json({message: error?.message});
@@ -111,7 +112,7 @@ export const getRoles = async (req: Request, res: Response): Promise<void> => {
 export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
     try {
         const response: IUser = await client.query("select username,first_name,last_name,role,email,phone_number,department,date_of_birth from users WHERE archived_at IS NULL ORDER BY role")
-        const allUsers : ICreateUserRequestBody[] = response?.rows;
+        const allUsers: ICreateUserRequestBody[] = response?.rows;
         res.status(200).json(allUsers ?? []);
         return;
     } catch (error: any) {
@@ -140,3 +141,17 @@ export const getProfileDetails = async (req: Request, res: Response): Promise<vo
         return;
     }
 }
+
+export const deleteUser = async (req: Request, res: Response): Promise<void> => {
+    try {
+        let userId: string = req.params.id
+        await client.query("update assets set user_id=null where user_id=$1", [userId])
+        await client.query("update asset_history set unassigned_at = $1 where unassigned_at is null and user_id=$2 ",[new Date(),userId])
+        await client.query("update users set archived_at = $1 where id = $2", [new Date(), userId])
+        res.status(200).json({message: "user deleted successfully"})
+        return
+    } catch (error: any) {
+        res.status(500).json({message: error?.message});
+        return
+    }
+};

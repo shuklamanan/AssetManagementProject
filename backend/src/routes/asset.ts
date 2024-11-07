@@ -4,7 +4,7 @@ import {
     createAssets,
     getAllAssets,
     updateAsset,
-    assetAssign,getAssetHistory, assetUnassign
+    assetAssign,getAssetHistory, assetUnassign,deleteAsset
 } from '../controllers/asset.ts';
 import {verifyRole} from "../middleware/verifyRole.ts";
 
@@ -16,3 +16,4 @@ assetRoutes.get('/history',verifyJwt,verifyRole(['Admin']),getAssetHistory)
 assetRoutes.post('/assign',verifyJwt,verifyRole(['Admin']),assetAssign)
 assetRoutes.post('/unassign/:id',verifyJwt,verifyRole(['Admin']),assetUnassign)
 assetRoutes.put('/:id',verifyJwt,verifyRole(['Admin']),updateAsset)
+assetRoutes.delete('/:id',verifyJwt,verifyRole(['Admin']),deleteAsset)

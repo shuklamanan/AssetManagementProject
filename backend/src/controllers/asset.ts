@@ -69,7 +69,7 @@ export const getAllAssets = async (req: Request, res: Response): Promise<void> =
                                              AND u.archived_at IS NULL
             `, [req.body.user.username]);
         }
-        const allAssets : IMergeDetailsOfAssetAndUser[] = response?.rows;
+        const allAssets : IMergeDetailsOfAssetAndUser[] | undefined = response?.rows;
         res.status(200).json(allAssets ?? []);
         return;
     } catch (error: any) {
@@ -150,3 +150,16 @@ export const getAssetHistory = async (req: Request, res: Response): Promise<void
         return;
     }
 }
+
+export const deleteAsset = async (req:Request, res:Response):Promise<void> => {
+    try {
+        let assetId:string = req.params.id
+        await client.query("update asset_history set unassigned_at = $1 where asset_id = $2 and unassigned_at is null",[new Date(),assetId])
+        await client.query("update assets set user_id=null , archived_at = $1 where id = $2",[new Date(),assetId])
+        res.status(200).json({message:"asset deleted successfully"})
+        return
+    } catch (error:any) {
+        res.status(500).json({message: error?.message});
+        return
+    }
+};

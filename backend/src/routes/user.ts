@@ -4,7 +4,8 @@ import {
     loginUser,
     getRoles,
     getAllUsers,
-    getProfileDetails
+    getProfileDetails,
+    deleteUser
 } from '../controllers/user.ts';
 import {verifyJwt} from "../middleware/verifyJWT.ts";
 import {verifyRole} from "../middleware/verifyRole.ts";
@@ -17,3 +18,4 @@ userRoutes.get('/roles',verifyJwt,getRoles)
 userRoutes.get('/profile',verifyJwt,getProfileDetails);
 userRoutes.get('/',verifyJwt,verifyRole(['Admin']),getAllUsers)
 userRoutes.post('/',verifyJwt,verifyRole(['Admin']),createUser)
+userRoutes.delete('/:id',verifyJwt,verifyRole(['Admin']),deleteUser)

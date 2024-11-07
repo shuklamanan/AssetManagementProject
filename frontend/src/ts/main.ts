@@ -122,3 +122,8 @@ function openAsset(asset : Asset) : void {
         tableBody.appendChild(row);
     }
 }
+
+document.getElementById("logout").addEventListener('click',()=>{
+    localStorage.clear();
+    location.href = "/src/html/login.html"
+})

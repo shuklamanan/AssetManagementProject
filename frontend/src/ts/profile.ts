@@ -1,5 +1,4 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts';
-
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";
 }
@@ -31,5 +30,8 @@ async function fetchUserProfile() : Promise<void> {
     (document.getElementById('joiningDate') as HTMLElement).textContent = userData.joining_date.substring(0,10) || "N/A";
 }
 
-
+document.getElementById("logout").addEventListener('click',()=>{
+    localStorage.clear();
+    location.href = "/src/html/login.html"
+})
 fetchUserProfile();

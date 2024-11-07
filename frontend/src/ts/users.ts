@@ -15,3 +15,7 @@ displayContentBasedOnRoles(roles);
 if(!roles.includes("Admin")){
     location.href = '/src/html/index.html'
 }
+document.getElementById("logout").addEventListener('click',()=>{
+    localStorage.clear();
+    location.href = "/src/html/login.html"
+})

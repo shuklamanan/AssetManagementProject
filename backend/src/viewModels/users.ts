@@ -9,8 +9,9 @@ export class User {
     phoneNumber: number;
     department: string | null;
     dateOfBirth: Date;
+    joiningDate : Date;
 
-    constructor({id,username, first_name, last_name, email, phone_number, department, date_of_birth}: ICreateUserRequestBody) {
+    constructor({id,username, first_name, last_name, email, phone_number, department, date_of_birth,created_at}: ICreateUserRequestBody) {
         this.id = id;
         this.username = username;
         this.firstName = first_name;
@@ -19,5 +20,6 @@ export class User {
         this.phoneNumber = phone_number;
         this.department = department;
         this.dateOfBirth = new Date(date_of_birth);
+        this.joiningDate = new Date(created_at!);
     }
 }

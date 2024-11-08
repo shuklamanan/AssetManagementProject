@@ -47,6 +47,7 @@ export interface ICreateUserRequestBody {
     last_name: string,
     email: string,
     password: string,
+    role : string[],
     phone_number: number,
     department: string,
     date_of_birth: Date | string,

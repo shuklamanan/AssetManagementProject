@@ -1,60 +1,53 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts'
+import {IAssetHistory} from "../functions/interface.ts";
 const commonApi: string = "http://localhost:5001";
 
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";
 }
-const roles = await fetchUserRoles();
+const roles : string[] = await fetchUserRoles();
 if(!roles.includes("Admin")){
     location.href = '/src/html/index.html'
 }
 
-document.getElementById("logout").addEventListener('click',()=>{
+document.getElementById("logout")!.addEventListener('click',() : void=>{
     localStorage.clear();
     location.href = "/src/html/login.html"
 })
-export interface AssetHistory {
-    user_id: string | null;
-    username: string | null;
-    asset_id: number;
-    asset_name: string;
-    assigned_at: string | null;
-    unassigned_at: string | null;
-}
 
 async function fetchAssetHistory(): Promise<void> {
-    const response = await fetch(`${commonApi}/assets/history`, {
+    const response: Response = await fetch(`${commonApi}/assets/history`, {
         headers: {
             'Authorization': `${localStorage.getItem('token')}`
         }
     });
-    let assets:AssetHistory[] = await response.json()
+    let assets:IAssetHistory[] = await response.json()
     console.log(assets)
     displayAssetHistory(assets);
 }
 
-function displayAssetHistory(assetHistory: AssetHistory[]): void {
-    const tbody = document.querySelector('#assetHistoryTable tbody') as HTMLElement;
+function displayAssetHistory(assetHistory: IAssetHistory[]): void {
+    const tbody : HTMLElement = document.querySelector('#assetHistoryTable tbody') as HTMLElement;
     tbody.innerHTML = '';
-
+    // console.log(assetHistory)
     assetHistory.forEach(entry => {
-        const row = document.createElement('tr');
+        const row: HTMLTableRowElement = document.createElement('tr');
 
-        const usernameCell = document.createElement('td');
+        const usernameCell : HTMLTableCellElement = document.createElement('td');
         usernameCell.textContent = entry.username || 'N/A';
         row.appendChild(usernameCell);
 
-        const assetNameCell = document.createElement('td');
+        const assetNameCell : HTMLTableCellElement = document.createElement('td');
         assetNameCell.textContent = entry.asset_name;
         row.appendChild(assetNameCell);
 
-        const assignedAtCell = document.createElement('td');
+        const assignedAtCell : HTMLTableCellElement = document.createElement('td');
         assignedAtCell.textContent = entry.assigned_at
             ? new Date(entry.assigned_at).toLocaleString()
             : 'N/A';
         row.appendChild(assignedAtCell);
 
-        const unassignedAtCell = document.createElement('td');
+        const unassignedAtCell : HTMLTableCellElement = document.createElement('td');
         unassignedAtCell.textContent = entry.unassigned_at
             ? new Date(entry.unassigned_at).toLocaleString()
             : 'N/A';
@@ -63,5 +56,5 @@ function displayAssetHistory(assetHistory: AssetHistory[]): void {
         tbody.appendChild(row);
     });
 }
-fetchAssetHistory()
+await fetchAssetHistory()
 

@@ -1,12 +1,4 @@
-interface IBodyStructureForAPI{
-    username : string,
-    firstName : string,
-    lastName : string,
-    email : string,
-    password : string,
-    phoneNumber : number,
-    dateOfBirth : string,
-}
+import {IBodyStructureForUserAPI} from "../functions/interface.ts";
 
 const commonApi : string = "http://localhost:5001/";
 const commonHeaders  : HeadersInit =  {
@@ -17,7 +9,7 @@ if (localStorage.getItem("token")) {
     window.location.href = "/src/html/index.html"
 }
 
-async function postRequest(api:string,body:IBodyStructureForAPI):Promise<void>{
+async function postRequest(api:string,body:IBodyStructureForUserAPI):Promise<void>{
     const res : Response  = await fetch(api, {
         method:"POST",
         headers:commonHeaders,
@@ -40,7 +32,7 @@ registrationForm.addEventListener("submit", async(e : Event) :Promise<void> => {
         location.reload();
     }
     const signupApi : string = commonApi + "users/signup";
-    const body:IBodyStructureForAPI = {
+    const body:IBodyStructureForUserAPI = {
         username : formValues.username,
         firstName : formValues.firstName,
         lastName : formValues.lastName,

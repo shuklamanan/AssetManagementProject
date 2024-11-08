@@ -10,8 +10,8 @@ async function displayContentBasedOnRoles(roles: string[]): Promise<void> {
     }
 }
 
-const roles = await fetchUserRoles();
-displayContentBasedOnRoles(roles);
+const roles: string[] = await fetchUserRoles();
+await displayContentBasedOnRoles(roles);
 
 async function fetchUserProfile() : Promise<void> {
     const response : Response = await fetch('http://localhost:5001/users/profile', {
@@ -21,18 +21,18 @@ async function fetchUserProfile() : Promise<void> {
         }
     });
     const userData = await response.json();
-
-    (document.getElementById('username') as HTMLElement).textContent = userData.username || "N/A";
-    (document.getElementById('fullName') as HTMLElement).textContent = userData.first_name + " " + userData.last_name || "N/A";
-    (document.getElementById('email') as HTMLElement).textContent = userData.email || "N/A";
+    console.log(userData);
+    (<HTMLElement>document.getElementById('username')).textContent = userData.username || "N/A";
+    (<HTMLElement>document.getElementById('fullName')).textContent = userData.firstName + " " + userData.lastName || "N/A";
+    (<HTMLElement>document.getElementById('email')).textContent = userData.email || "N/A";
     // (document.getElementById('department') as HTMLElement).textContent = userData.department || "N/A";
-    (document.getElementById('phoneNumber') as HTMLElement).textContent = userData.phone_number || "N/A";
-    (document.getElementById('dob') as HTMLElement).textContent = userData.date_of_birth.substring(0,10) || "N/A";
-    (document.getElementById('joiningDate') as HTMLElement).textContent = userData.joining_date.substring(0,10) || "N/A";
+    (<HTMLElement>document.getElementById('phoneNumber')).textContent = userData.phoneNumber || "N/A";
+    (<HTMLElement>document.getElementById('dob')).textContent = userData.dateOfBirth.substring(0,10) || "N/A";
+    (<HTMLElement>document.getElementById('joiningDate')).textContent = userData.joiningDate.substring(0,10) || "N/A";
 }
 
-document.getElementById("logout").addEventListener('click',()=>{
+document.getElementById("logout")!.addEventListener('click',()=>{
     localStorage.clear();
     location.href = "/src/html/login.html"
 })
-fetchUserProfile();
+await fetchUserProfile();

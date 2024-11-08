@@ -6,6 +6,7 @@ import {
     ICreateUserRequestBody,
     IUser
 } from "../interfaces.ts";
+import {User} from "../viewModels/users.ts";
 import {hashPassword} from "../functions/hashPassword.ts";
 
 export const getRoles = async (req: Request, res: Response): Promise<void> => {
@@ -20,9 +21,9 @@ export const getRoles = async (req: Request, res: Response): Promise<void> => {
 
 export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
     try {
-        const response: IUser = await client.query("SELECT id,username,first_name,last_name,role,email,phone_number,department,date_of_birth FROM users WHERE archived_at IS NULL ORDER BY role")
-        const allUsers : ICreateUserRequestBody[] | undefined = response?.rows;
-        res.status(200).json(allUsers ?? []);
+        const allUsers: ICreateUserRequestBody[] = (await client.query("SELECT id,username,first_name,last_name,role,email,phone_number,department,date_of_birth FROM users WHERE archived_at IS NULL ORDER BY role")).rows
+        const users = allUsers.map(userData => new User(userData));
+        res.status(200).json(users ?? []);
         return;
     } catch (error: any) {
         res.status(500).json({message: error?.message});
@@ -33,18 +34,7 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
 //TODO refactoring
 export const getProfileDetails = async (req: Request, res: Response): Promise<void> => {
     try {
-        console.log(req.body.user);
-        res.status(200).json({
-            "username": req.body.user.username,
-            "firsName": req.body.user.first_name,
-            "lastName": req.body.user.last_name,
-            "role": req.body.user.role,
-            "email": req.body.user.email,
-            "phoneNumber": req.body.user.phone_number,
-            "department": req.body.user.department,
-            "dateOfBirth": req.body.user.date_of_birth,
-            "joiningDate": req.body.user.created_at,
-        });
+        res.status(200).json(new User(req.body.user));
         return;
     } catch (error: any) {
         res.status(500).json({message: error?.message});

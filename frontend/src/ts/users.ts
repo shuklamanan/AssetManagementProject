@@ -1,10 +1,11 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts'
-const commonApi: string = "http://localhost:5001";
+import {IBodyStructureForUserAPI} from "../functions/interface.ts";
+import {createUserViaAdminApi, deleteUserApi, getAllUsersApi, headers} from "../functions/api.ts";
 
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";
 }
-const roles = await fetchUserRoles();
+const roles:string[] = await fetchUserRoles();
 if(!roles.includes("Admin")){
     location.href = '/src/html/index.html'
 }
@@ -14,7 +15,7 @@ interface IUser {
     username: string;
     firstName: string;
     lastName: string;
-    role: string;
+    role: string[];
     email: string;
     phoneNumber: number;
     department: string | null;
@@ -22,30 +23,23 @@ interface IUser {
 }
 
 async function fetchUsers(): Promise<IUser[]> {
-    const getUsersApi: string = commonApi + "/users";
-    const response: Response = await fetch(getUsersApi, {
-        headers: {
-            'Authorization': `${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-        }
+    const response: Response = await fetch(getAllUsersApi, {
+        headers:headers
     });
     return await response.json();
 }
 let users:IUser[] = await fetchUsers()
 displayUsers(users)
 console.log(users)
-document.getElementById("logout")!.addEventListener('click',()=>{
+document.getElementById("logout")!.addEventListener('click',() : void=>{
     localStorage.clear();
     location.href = "/src/html/login.html"
 })
 
 async function deleteUser(userId: number): Promise<void> {
-    const deleteUserApi: string = commonApi + `/users/${userId}`;
-    const response: Response = await fetch(deleteUserApi, {
-        headers: {
-            'Authorization': `${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-        },
+    const deleteUser: string = deleteUserApi + `${userId}`;
+    const response: Response = await fetch(deleteUser, {
+        headers: headers,
         method: "DELETE"
     });
     if (response.ok) {
@@ -59,8 +53,11 @@ async function deleteUser(userId: number): Promise<void> {
 
 function displayUsers(users: IUser[]): void {
     const tbody: HTMLElement = document.getElementById('userTableBody') as HTMLElement;
+    const addUserBtn : HTMLElement = <HTMLElement>document.getElementById('createUser');
+    addUserBtn!.setAttribute('data-toggle', 'modal');
+    addUserBtn!.setAttribute('data-target', '#addUserModal');
     tbody.innerHTML = '';
-
+    console.log(users);
     users.forEach(user => {
         const row: HTMLTableRowElement = document.createElement('tr');
 
@@ -95,3 +92,40 @@ function displayUsers(users: IUser[]): void {
 }
 
 
+async function postRequest(api:string,body:IBodyStructureForUserAPI):Promise<void>{
+    const res : Response  = await fetch(api, {
+        method:"POST",
+        headers:headers,
+        body:JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(!(res.status >= 200 && res.status < 300)){
+        alert(data.message);
+        return;
+    }
+    window.location.reload();
+}
+
+const addUserForm: HTMLFormElement = <HTMLFormElement>document.getElementById("addUserForm");
+addUserForm.addEventListener("submit", async(e : Event) :Promise<void> => {
+    e.preventDefault();
+    const formData:FormData = new FormData(addUserForm);
+    const formValues: object = Object.fromEntries(formData);
+    const getRole : HTMLElement = document.getElementById('role')!;
+    if(formValues.phoneNumber.length != 10 || parseInt(formValues.phoneNumber)<0){
+        alert("Please enter a valid phone number");
+        location.reload();
+    }
+    const body:IBodyStructureForUserAPI = {
+        username : formValues.username,
+        firstName : formValues.firstName,
+        lastName : formValues.lastName,
+        email : formValues.email,
+        role: [getRole.value],
+        password : formValues.password,
+        phoneNumber : parseInt(formValues.phoneNumber),
+        dateOfBirth : formValues.dateOfBirth,
+    }
+    console.log(body);
+    await postRequest(createUserViaAdminApi,body);
+})

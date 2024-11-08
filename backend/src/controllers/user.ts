@@ -31,7 +31,6 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
     }
 }
 
-//TODO refactoring
 export const getProfileDetails = async (req: Request, res: Response): Promise<void> => {
     try {
         res.status(200).json(new User(req.body.user));

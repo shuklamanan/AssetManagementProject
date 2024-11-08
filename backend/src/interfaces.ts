@@ -1,25 +1,3 @@
-import {Request} from 'express'
-export type IRequestWithUser = Request & {
-    user:any
-}
-
-export interface JwtPayload {
-    id: number;
-}
-
-interface ICreateAssetHistoryBody{
-    id?: number,
-    asset_id : number,
-    user_id : number,
-    assigned_by : number,
-    assigned_at? : string | Date,
-    unassigned_at? : string | Date
-}
-
-export interface IAssetHistory{
-    rows: ICreateAssetHistoryBody[]
-}
-
 export interface ILoginUserRequestBody {
     username: string,
     password: string
@@ -111,6 +89,14 @@ export interface IMergeDetailsOfAssetAndUserAndAssetHistory{
     unassigned_at? : string | Date
 }
 
+export interface IPendingAssetRequest {
+    id: number;
+    assetId: number;
+    userId: number;
+    status: string;
+    assetName: string;
+    username: string;
+}
 export interface IUserAndAssetAndAssetHistory{
     rows : IMergeDetailsOfAssetAndUserAndAssetHistory[];
 }

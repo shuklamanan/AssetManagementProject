@@ -1,7 +1,7 @@
 import jwt, {JwtPayload} from "jsonwebtoken";
 import client from "../../postgresConfig.ts";
 import {Request, Response, NextFunction} from  'express'
-import {IUser} from "../interfaces.ts";
+import {ICreateUserRequestBody, IUser} from "../interfaces.ts";
 
 export const verifyJwt = async (req :Request,res:Response,next:NextFunction):Promise<void> => {
     try {
@@ -11,12 +11,12 @@ export const verifyJwt = async (req :Request,res:Response,next:NextFunction):Pro
             return
         }
         const payload : JwtPayload = jwt.verify(authToken,process.env.ACCESS_TOKEN_SECRET??"") as JwtPayload
-        const user :IUser =  await client.query('select * from users where id = $1',[payload?.id])
-        if(user.rows.length===0){
-             res.status(404).json({message:"user not found"})
+        const user :ICreateUserRequestBody[] =  (await client.query('select * from users where id = $1',[payload?.id])).rows
+        if(user.length===0){
+            res.status(404).json({message:"user not found"})
             return
         }
-        req.body.user = user.rows[0]
+        req.body.user = user[0]
         next()
     } catch (e) {
         res.sendStatus(401)

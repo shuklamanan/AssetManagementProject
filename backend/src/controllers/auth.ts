@@ -62,12 +62,12 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             res.status(400).json({message: "some fields are missing in req"})
             return
         }
-        let response : IUser = await client.query("select * from users where username=$1 and archived_at is null", [username]);
-        if (response.rows.length === 0) {
+        let response : ICreateUserRequestBody[] = (await client.query("select * from users where username=$1 and archived_at is null", [username])).rows
+        if (response.length === 0) {
             res.status(404).json({message: "user not found"})
             return
         }
-        let user: ICreateUserRequestBody = response.rows[0]
+        let user: ICreateUserRequestBody = response[0]
         if (!bcrypt.compareSync(password, user.password)) {
             res.status(401).json({message: "user auth failed incorrect username or password"})
             return

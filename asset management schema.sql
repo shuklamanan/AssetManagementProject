@@ -1,5 +1,6 @@
 CREATE TYPE role AS ENUM ('Admin','Employee');
 CREATE TYPE asset_type AS ENUM ('Hardware','Software');
+CREATE TYPE status AS ENUM ('Pending','Approved','Disapproved');
 
 CREATE TABLE "users"
 (
@@ -28,6 +29,15 @@ CREATE TABLE "assets"
     "archived_at" timestamp
 );
 
+CREATE TABLE "asset_requests"
+(
+    "id"          SERIAL PRIMARY KEY,
+    "asset_id"        bigint not null,
+    "user_id"     bigint not null,
+    "status"  status not null
+
+);
+
 CREATE TABLE "asset_history"
 (
     "id"            SERIAL PRIMARY KEY,
@@ -49,3 +59,9 @@ ALTER TABLE "asset_history"
 
 ALTER TABLE "asset_history"
     ADD FOREIGN KEY ("assigned_by") REFERENCES "users" ("id");
+
+ALTER TABLE "asset_requests"
+    ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+
+ALTER TABLE "asset_requests"
+    ADD FOREIGN KEY ("asset_id") REFERENCES "assets" ("id");

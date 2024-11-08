@@ -1,6 +1,5 @@
 import {IBodyStructureForUserAPI} from "../functions/interface.ts";
-
-const commonApi : string = "http://localhost:5001/";
+import {signupApi} from "../functions/api.ts";
 const commonHeaders  : HeadersInit =  {
     "Content-Type": "application/json",
     "Access-Control-Origin": "*"
@@ -15,7 +14,7 @@ async function postRequest(api:string,body:IBodyStructureForUserAPI):Promise<voi
         headers:commonHeaders,
         body:JSON.stringify(body)
     });
-    const data = await res.json();
+    const data : Response = await res.json();
     if(!(res.status >= 200 && res.status < 300)){
         alert(data.message);
         return;
@@ -31,7 +30,6 @@ registrationForm.addEventListener("submit", async(e : Event) :Promise<void> => {
         alert("Please enter a valid phone number");
         location.reload();
     }
-    const signupApi : string = commonApi + "users/signup";
     const body:IBodyStructureForUserAPI = {
         username : formValues.username,
         firstName : formValues.firstName,

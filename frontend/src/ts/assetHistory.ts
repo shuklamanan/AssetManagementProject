@@ -1,6 +1,6 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts'
 import {IAssetHistory} from "../functions/interface.ts";
-const commonApi: string = "http://localhost:5001";
+import {assetHistoryApi, headers} from "../functions/api.ts";
 
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";
@@ -16,10 +16,8 @@ document.getElementById("logout")!.addEventListener('click',() : void=>{
 })
 
 async function fetchAssetHistory(): Promise<void> {
-    const response: Response = await fetch(`${commonApi}/assets/history`, {
-        headers: {
-            'Authorization': `${localStorage.getItem('token')}`
-        }
+    const response: Response = await fetch(assetHistoryApi, {
+        headers: headers,
     });
     let assets:IAssetHistory[] = await response.json()
     console.log(assets)
@@ -27,9 +25,8 @@ async function fetchAssetHistory(): Promise<void> {
 }
 
 function displayAssetHistory(assetHistory: IAssetHistory[]): void {
-    const tbody : HTMLElement = document.querySelector('#assetHistoryTable tbody') as HTMLElement;
+    const tbody : HTMLElement = <HTMLElement>document.querySelector('#assetHistoryTable tbody');
     tbody.innerHTML = '';
-    // console.log(assetHistory)
     assetHistory.forEach(entry => {
         const row: HTMLTableRowElement = document.createElement('tr');
 

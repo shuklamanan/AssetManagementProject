@@ -1,6 +1,5 @@
-import { IBodyStructureForAPI } from "../functions/interface";
-
-const commonApi : string = `http://localhost:5001/`;
+import {IBodyStructureForAPI, ILoginToken} from "../functions/interface";
+import {loginApi} from "../functions/api.ts";
 const commonHeaders  : HeadersInit =  {
     "Content-Type": "application/json",
     "Access-Control-Origin": "*"
@@ -16,7 +15,7 @@ async function postRequest(api:string,body:IBodyStructureForAPI): Promise<void>{
         body:JSON.stringify(body)
     });
 
-    const data = await res.json();
+    const data: ILoginToken = await res.json();
     if(!(res.status >= 200 && res.status < 300)){
         alert(data.message)
         return;
@@ -30,8 +29,7 @@ const loginForm : HTMLFormElement = <HTMLFormElement>document.getElementById('lo
 loginForm.addEventListener("submit", async (e: Event): Promise<void> => {
     e.preventDefault();
     const formData: FormData = new FormData(loginForm);
-    const formValues : Object = Object.fromEntries(formData);
-    const loginApi: string = commonApi + "users/login";
+    const formValues : object = Object.fromEntries(formData);
     const body : IBodyStructureForAPI = {
         username:formValues.username,
         password:formValues.password

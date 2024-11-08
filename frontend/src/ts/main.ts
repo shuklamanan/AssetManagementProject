@@ -1,7 +1,13 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts'
 import IAsset, {IUser} from "../functions/interface.ts";
-import {i} from "vite/dist/node/types.d-aGj9QkWt";
-const commonApi:string = "http://localhost:5001";
+import {
+    assetAssignApi, assetUnassignApi,
+    createAssetApi,
+    deleteAssetApi,
+    getAllAssetsApi,
+    getAllUsersApi,
+    getRolesApi, headers
+} from "../functions/api.ts";
 
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";
@@ -19,13 +25,9 @@ displayContentBasedOnRoles(roles);
 
 let assets: IAsset[] = [];
 
-async function checkAdminOrNot() : Promise<boolean> {
-    const getRoleApi : string = commonApi + '/users/roles';
-    const response : Response = await fetch(getRoleApi,{
-        headers: {
-            'Authorization': `${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-        },
+async function checkAdminOrNot() : Promise<boolean>{
+    const response : Response = await fetch(getRolesApi,{
+        headers: headers,
     });
     const roleArray : string[] = await response.json();
     console.log(roleArray);
@@ -35,13 +37,9 @@ async function checkAdminOrNot() : Promise<boolean> {
 
 let users: IUser[];
 async function getDataOfUser(dropdownForUsers:HTMLElement) :Promise<void>{
-    const allUserApi : string = commonApi + '/users';
     let selectTag : HTMLSelectElement = document.createElement('select');
-    const response : Response = await fetch(allUserApi, {
-        headers: {
-            'Authorization': `${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-        }
+    const response : Response = await fetch(getAllUsersApi, {
+        headers: headers,
     });
     users = await response.json();
     console.log(users);
@@ -59,18 +57,27 @@ async function getDataOfUser(dropdownForUsers:HTMLElement) :Promise<void>{
 }
 
 async function fetchAssets() : Promise<void> {
-    const getAssetApi : string = commonApi + "/assets/";
-    const response : Response = await fetch(getAssetApi, {
-        headers: {
-            'Authorization': `${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-        }
+    const response : Response = await fetch(getAllAssetsApi, {
+        headers: headers,
     });
     assets = await response.json();
     console.log(assets);
     await displayAssets(assets);
 }
 await fetchAssets()
+
+function createOpenAndCloseButtons(className:string,idName:string,targetModal:string,buttonContent:string) : HTMLTableCellElement{
+    const buttonCell : HTMLTableCellElement = document.createElement('td');
+    const button : HTMLButtonElement = document.createElement('button');
+    button.type = 'button';
+    button.setAttribute("id",idName);
+    button.className = className;
+    button.textContent = buttonContent;
+    button.setAttribute('data-toggle', 'modal');
+    button.setAttribute('data-target', targetModal);
+    buttonCell.appendChild(button);
+    return buttonCell;
+}
 
 async function displayAssets(assets: IAsset[]) : Promise<void> {
     const tbody : HTMLElement = document.getElementById('assetTableBody') as HTMLElement;
@@ -95,29 +102,13 @@ async function displayAssets(assets: IAsset[]) : Promise<void> {
         ownerCell.textContent = asset.username || 'Unassigned';
         row.appendChild(ownerCell);
 
-        const openButtonCell : HTMLTableCellElement = document.createElement('td');
-        const openButton : HTMLButtonElement = document.createElement('button');
-        openButton.type = 'button';
-        openButton.setAttribute("id","openButton");
-        openButton.className = 'btn btn-primary';
-        openButton.textContent = 'Open';
-        openButton.setAttribute('data-toggle', 'modal');
-        openButton.setAttribute('data-target', '#assetModal');
-        openButton.onclick = () => openAsset(asset);
-        openButtonCell.appendChild(openButton);
+        const openButtonCell : HTMLTableCellElement = createOpenAndCloseButtons('btn btn-primary',"openButton",'#assetModal','Open');
+        openButtonCell.firstChild!.onclick = () => openAsset(asset);
         row.appendChild(openButtonCell);
-        console.log(isAdmin)
         if(isAdmin) {
-            const deleteButtonCell: HTMLTableCellElement = document.createElement('td');
-            const deleteButton: HTMLButtonElement = document.createElement('button');
-            deleteButton.className = 'btn btn-danger';
-            deleteButton.type = 'button';
-            deleteButton.setAttribute('data-toggle', 'modal');
-            deleteButton.setAttribute('data-target', '#deleteModal');
-            deleteButton.textContent = 'Delete';
+            const deleteButtonCell : HTMLTableCellElement = createOpenAndCloseButtons('btn btn-danger',"deleteButton",'#deleteModal','Delete');
             const confirmDeleteAssetBtn: HTMLButtonElement = <HTMLButtonElement>document.getElementById('confirmDeleteAssetBtn')!;
             confirmDeleteAssetBtn.onclick = () => deleteAsset(asset.id);
-            deleteButtonCell.appendChild(deleteButton);
             row.appendChild(deleteButtonCell);
         }
         tbody.appendChild(row);
@@ -150,7 +141,6 @@ function addAssetAssignDropDown(dropdown:HTMLElement):void{
     const tableBody:HTMLElement = document.getElementById('addAssetConfigTableBody')!;
     tableBody.innerHTML = "";
     addAssetDropDownForUsers.innerHTML = "";
-    const selectTag : ChildNode = dropdown!.firstChild;
     console.log(dropdown!.firstChild!.childNodes);
     let noUserPresent:boolean = false;
     (dropdown!.firstChild!.childNodes).forEach(option  => {
@@ -203,12 +193,8 @@ async function addAsset(dropdown:HTMLElement):Promise<void> {
             addAssetApiBody["userId"] = userId.toString();
         }
     }
-    const addAssetApi : string = commonApi + "/assets/";
-    const response :Response = await fetch(addAssetApi,{
-        headers : {
-        'Authorization': `${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json'
-        },
+    const response :Response = await fetch(createAssetApi,{
+        headers : headers,
         method : 'POST',
         body: JSON.stringify(addAssetApiBody)
     });
@@ -226,12 +212,10 @@ function enterAssetDetails(dropdown:HTMLElement) : void {
 }
 
 async function deleteAsset(id:number) : Promise<void> {
-    const deleteAssetApi : string = commonApi + `/assets/${id}`;
-    const response : Response = await fetch(deleteAssetApi, {
-        headers: {
-            'Authorization': `${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-        },
+    console.log(id);
+    const assetDeleteApi:string = deleteAssetApi + `${id}`;
+    const response : Response = await fetch(assetDeleteApi, {
+        headers: headers,
         method: "DELETE"
     });
     assets = await response.json();
@@ -276,15 +260,11 @@ function getIdFromUsername(user : HTMLElement) : number | undefined{
 }
 
 async function assetAssignToUser(id:string) : Promise<void>{
-    const assetAssignApi : string = commonApi + `/assets/assign`;
     const user: HTMLElement = document.getElementById('users')!;
     const userId : number | undefined = getIdFromUsername(user);
     console.log(id,userId);
     const response : Response = await fetch(assetAssignApi, {
-        headers: {
-            'Authorization': `${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-        },
+        headers: headers,
         body: JSON.stringify({
             "assetId":id,
             "userId":userId
@@ -349,12 +329,9 @@ async function openAsset(asset : IAsset) : Promise<void> {
 }
 
 async function assetUnassign(id:string) : Promise<void>{
-    const assetUnassignApi : string = commonApi + `/assets/unassign/${id}`;
-    await fetch(assetUnassignApi, {
-        headers: {
-            'Authorization': `${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-        },
+    const unassignAssetApi : string = assetUnassignApi + `${id}`;
+    await fetch(unassignAssetApi, {
+        headers: headers,
         method: "POST"
     });
     console.log(assets);

@@ -36,7 +36,13 @@ export interface IBodyStructureForUserAPI{
     firstName : string,
     lastName : string,
     email : string,
+    role? : string[],
     password : string,
     phoneNumber : number,
     dateOfBirth : string,
+}
+
+export interface ILoginToken{
+    token?:string,
+    message?:string
 }

@@ -9,19 +9,19 @@ if(!roles.includes("Admin")){
     location.href = '/src/html/index.html'
 }
 
-interface User {
+interface IUser {
     id: number;
     username: string;
-    first_name: string;
-    last_name: string;
+    firstName: string;
+    lastName: string;
     role: string;
     email: string;
-    phone_number: number;
+    phoneNumber: number;
     department: string | null;
-    date_of_birth: string;
+    dateOfBirth: string;
 }
 
-async function fetchUsers(): Promise<User[]> {
+async function fetchUsers(): Promise<IUser[]> {
     const getUsersApi: string = commonApi + "/users";
     const response: Response = await fetch(getUsersApi, {
         headers: {
@@ -31,10 +31,10 @@ async function fetchUsers(): Promise<User[]> {
     });
     return await response.json();
 }
-let users:User[] = await fetchUsers()
+let users:IUser[] = await fetchUsers()
 displayUsers(users)
 console.log(users)
-document.getElementById("logout").addEventListener('click',()=>{
+document.getElementById("logout")!.addEventListener('click',()=>{
     localStorage.clear();
     location.href = "/src/html/login.html"
 })
@@ -57,7 +57,7 @@ async function deleteUser(userId: number): Promise<void> {
     }
 }
 
-function displayUsers(users: User[]): void {
+function displayUsers(users: IUser[]): void {
     const tbody: HTMLElement = document.getElementById('userTableBody') as HTMLElement;
     tbody.innerHTML = '';
 
@@ -66,13 +66,13 @@ function displayUsers(users: User[]): void {
 
         const cells = [
             user.username,
-            user.first_name,
-            user.last_name,
+            user.firstName,
+            user.lastName,
             user.role,
             user.email,
-            user.phone_number,
+            user.phoneNumber,
             user.department || 'N/A',
-            new Date(user.date_of_birth).toLocaleDateString()
+            new Date(user.dateOfBirth).toLocaleDateString()
         ];
 
         cells.forEach(cellText => {

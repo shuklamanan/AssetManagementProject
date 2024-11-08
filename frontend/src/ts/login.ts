@@ -1,9 +1,6 @@
-interface IBodyStructureForAPI{
-    username : string,
-    password : string,
-}
+import { IBodyStructureForAPI } from "../functions/interface";
 
-const commonApi = `http://localhost:5001/`;
+const commonApi : string = `http://localhost:5001/`;
 const commonHeaders  : HeadersInit =  {
     "Content-Type": "application/json",
     "Access-Control-Origin": "*"
@@ -34,10 +31,10 @@ loginForm.addEventListener("submit", async (e: Event): Promise<void> => {
     e.preventDefault();
     const formData: FormData = new FormData(loginForm);
     const formValues : Object = Object.fromEntries(formData);
-    const registerApi: string = commonApi + "users/login";
+    const loginApi: string = commonApi + "users/login";
     const body : IBodyStructureForAPI = {
         username:formValues.username,
         password:formValues.password
     };
-    await postRequest(registerApi, body);
+    await postRequest(loginApi, body);
 });

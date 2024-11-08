@@ -20,7 +20,7 @@ export const createAssets = async (req: Request, res: Response): Promise<void> =
         }
         const response: IAsset = await client.query("insert into assets(name, asset_type, config,user_id) values ($1,$2,$3,$4) RETURNING *", [name, assetType, JSON.stringify(config), userId ?? null])
         if (userId) {
-            await client.query("INSERT INTO asset_history (asset_id,user_id,assigned_by,assigned_at) VALUES ($1,$2,$3,now())", [response?.rows[0].id, req.body.user_id, req.body.user.id]);
+            await client.query("INSERT INTO asset_history (asset_id,user_id,assigned_by,assigned_at) VALUES ($1,$2,$3,now())", [response?.rows[0].id, userId, req.body.user.id]);
         }
         res.status(201).json({message: "asset created successfully"});
         return;

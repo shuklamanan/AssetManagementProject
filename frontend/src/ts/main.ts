@@ -1,6 +1,8 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts'
-import IAsset, {IUser} from "../functions/interfaces.ts";
+import IAsset, {IUser} from "../functions/interface.ts";
+import {i} from "vite/dist/node/types.d-aGj9QkWt";
 const commonApi:string = "http://localhost:5001";
+
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";
 }
@@ -14,9 +16,48 @@ function displayContentBasedOnRoles(roles: string[]): void {
 
 const roles : string[] = await fetchUserRoles();
 displayContentBasedOnRoles(roles);
-fetchAssets()
 
 let assets: IAsset[] = [];
+
+async function checkAdminOrNot() : Promise<boolean> {
+    const getRoleApi : string = commonApi + '/users/roles';
+    const response : Response = await fetch(getRoleApi,{
+        headers: {
+            'Authorization': `${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+        },
+    });
+    const roleArray : string[] = await response.json();
+    console.log(roleArray);
+    console.log("--",roleArray.includes('Admin'))
+    return roleArray.includes("Admin");
+}
+
+let users: IUser[];
+async function getDataOfUser(dropdownForUsers:HTMLElement) :Promise<void>{
+    const allUserApi : string = commonApi + '/users';
+    let selectTag : HTMLSelectElement = document.createElement('select');
+    const response : Response = await fetch(allUserApi, {
+        headers: {
+            'Authorization': `${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+        }
+    });
+    users = await response.json();
+    console.log(users);
+    selectTag.setAttribute('name','users');
+    selectTag.setAttribute('id','users');
+    for(let i:number=0;i<users.length;i++){
+        const optionTag :HTMLOptionElement = document.createElement('option');
+        optionTag.setAttribute('value',users[i].username);
+        optionTag.textContent = users[i].username;
+        selectTag.appendChild(optionTag);
+    }
+    dropdownForUsers.appendChild(selectTag);
+    console.log(selectTag);
+    console.log(dropdownForUsers);
+}
+
 async function fetchAssets() : Promise<void> {
     const getAssetApi : string = commonApi + "/assets/";
     const response : Response = await fetch(getAssetApi, {
@@ -27,12 +68,14 @@ async function fetchAssets() : Promise<void> {
     });
     assets = await response.json();
     console.log(assets);
-    displayAssets(assets);
+    await displayAssets(assets);
 }
+await fetchAssets()
 
-function displayAssets(assets: IAsset[]) : void {
+async function displayAssets(assets: IAsset[]) : Promise<void> {
     const tbody : HTMLElement = document.getElementById('assetTableBody') as HTMLElement;
-
+    const addAssetBtn: HTMLElement | null = document.getElementById('createAssets');
+    const isAdmin : boolean = await checkAdminOrNot();
     assets.forEach(asset  => {
         const row : HTMLTableRowElement = document.createElement('tr');
 
@@ -63,22 +106,123 @@ function displayAssets(assets: IAsset[]) : void {
         openButton.onclick = () => openAsset(asset);
         openButtonCell.appendChild(openButton);
         row.appendChild(openButtonCell);
-
-        const deleteButtonCell: HTMLTableCellElement = document.createElement('td');
-        const deleteButton : HTMLButtonElement = document.createElement('button');
-        deleteButton.className = 'btn btn-danger';
-        deleteButton.type = 'button';
-        deleteButton.setAttribute('data-toggle', 'modal');
-        deleteButton.setAttribute('data-target', '#deleteModal');
-        deleteButton.textContent = 'Delete';
-        const confirmDeleteAssetBtn : HTMLButtonElement = <HTMLButtonElement>document.getElementById('confirmDeleteAssetBtn')!;
-        confirmDeleteAssetBtn.onclick = () => deleteAsset(asset.id);
-        deleteButtonCell.appendChild(deleteButton);
-        row.appendChild(deleteButtonCell);
+        console.log(isAdmin)
+        if(isAdmin) {
+            const deleteButtonCell: HTMLTableCellElement = document.createElement('td');
+            const deleteButton: HTMLButtonElement = document.createElement('button');
+            deleteButton.className = 'btn btn-danger';
+            deleteButton.type = 'button';
+            deleteButton.setAttribute('data-toggle', 'modal');
+            deleteButton.setAttribute('data-target', '#deleteModal');
+            deleteButton.textContent = 'Delete';
+            const confirmDeleteAssetBtn: HTMLButtonElement = <HTMLButtonElement>document.getElementById('confirmDeleteAssetBtn')!;
+            confirmDeleteAssetBtn.onclick = () => deleteAsset(asset.id);
+            deleteButtonCell.appendChild(deleteButton);
+            row.appendChild(deleteButtonCell);
+        }
         tbody.appendChild(row);
         console.log(row)
     });
+    if(isAdmin){
+        const dropdownForAssetAssign:HTMLElement = document.createElement('div')
+        const addAssetAssetName: HTMLElement = document.getElementById('addAssetAssetName')!;
+        console.log(addAssetAssetName.value);
+        addAssetAssetName.value = "";
+        await getDataOfUser(dropdownForAssetAssign);
+        addAssetBtn!.setAttribute('data-toggle', 'modal');
+        addAssetBtn!.setAttribute('data-target', '#addAssetModal');
+        addAssetBtn!.onclick = () => enterAssetDetails(dropdownForAssetAssign);
+    }
+    else{
+        if(addAssetBtn) {
+            addAssetBtn.parentNode!.removeChild(addAssetBtn);
+        }
+        console.log(isAdmin);
+        const closeColumn : HTMLElement | null = document.getElementById('closeColumn');
+        if(closeColumn){
+            closeColumn.parentNode!.removeChild(closeColumn);
+        }
+    }
+}
 
+function addAssetAssignDropDown(dropdown:HTMLElement):void{
+    const addAssetDropDownForUsers :HTMLElement = document.getElementById("addAssetDropDownForUsers")!;
+    const tableBody:HTMLElement = document.getElementById('addAssetConfigTableBody')!;
+    tableBody.innerHTML = "";
+    addAssetDropDownForUsers.innerHTML = "";
+    const selectTag : ChildNode = dropdown!.firstChild;
+    console.log(dropdown!.firstChild!.childNodes);
+    let noUserPresent:boolean = false;
+    (dropdown!.firstChild!.childNodes).forEach(option  => {
+        if(option.value == "noUser"){
+            noUserPresent = true;
+        }
+    })
+    if(!noUserPresent) {
+        const optionTag: HTMLOptionElement = document.createElement('option');
+        optionTag.selected = true;
+        optionTag.setAttribute('value', 'noUser')
+        optionTag.textContent = "No User";
+        dropdown!.firstChild!.appendChild(optionTag);
+    }
+    addAssetDropDownForUsers.appendChild(dropdown);
+}
+
+function addRow() : void{
+    const tableBody:HTMLElement = document.getElementById('addAssetConfigTableBody')!;
+    const newRow : HTMLTableRowElement = document.createElement('tr');
+
+    const idCell : HTMLTableCellElement = document.createElement('td');
+    idCell.innerHTML = "<input type='text' class='addAssetConfigDetails'>"
+    newRow.appendChild(idCell);
+
+    const nameCell: HTMLTableCellElement = document.createElement('td');
+    nameCell.innerHTML = "<input type='text' class='addAssetConfigDetails'>"
+    newRow.appendChild(nameCell);
+
+    tableBody.appendChild(newRow);
+}
+
+async function addAsset(dropdown:HTMLElement):Promise<void> {
+    const getConfigDetail = document.getElementsByTagName('input');
+    const assetType : HTMLElement = document.getElementById('assetType')!;
+    let configObj : Record<string, string> = {};
+    for(let i : number=1;i<getConfigDetail.length;i+=2){
+        configObj[getConfigDetail[i].value] = getConfigDetail[i+1].value;
+    }
+    const assignUser : string | undefined = (dropdown!.firstChild!.value == "noUser") ? undefined : dropdown!.firstChild!.value;
+    const addAssetApiBody : Record<string,string | Record<string,string>> = {
+        "name": getConfigDetail[0].value,
+        "assetType": assetType.value,
+        "config": configObj
+    }
+    if(assignUser){
+        const userId:number | undefined = getIdFromUsername(<HTMLElement>dropdown!.firstChild);
+        console.log(userId);
+        if(userId){
+            addAssetApiBody["userId"] = userId.toString();
+        }
+    }
+    const addAssetApi : string = commonApi + "/assets/";
+    const response :Response = await fetch(addAssetApi,{
+        headers : {
+        'Authorization': `${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+        },
+        method : 'POST',
+        body: JSON.stringify(addAssetApiBody)
+    });
+    if(response.status == 201){
+        window.location.reload();
+    }
+}
+
+function enterAssetDetails(dropdown:HTMLElement) : void {
+    addAssetAssignDropDown(dropdown);
+    const addRowBtn:HTMLElement =  document.getElementById('addRowBtn')!;
+    addRowBtn.addEventListener('click',addRow)
+    const addAssetBtn : HTMLElement = document.getElementById('addAssetBtn')!;
+    addAssetBtn!.onclick = () => addAsset(dropdown);
 }
 
 async function deleteAsset(id:number) : Promise<void> {
@@ -107,12 +251,8 @@ function addAssignUnassignButtons(asset:IAsset) : HTMLElement{
     assignBtn.textContent = 'Assign';
     const unassignBtn: HTMLElement = createAssignUnassignBtn(<HTMLElement>document.createElement('button'),"assetUnassignBtn","btn btn-danger");
     unassignBtn.textContent = 'Unassign';
-    const closeBtn: HTMLElement = createAssignUnassignBtn(<HTMLElement>document.createElement('button'),"close","btn btn-secondary");
-    closeBtn.setAttribute('data-dismiss', 'modal');
-    closeBtn.textContent = 'Close';
     div.appendChild(assignBtn);
     div.appendChild(unassignBtn);
-    div.appendChild(closeBtn);
     if(asset.username){
         assignBtn.style.display = "none";
     }
@@ -125,17 +265,20 @@ function addAssignUnassignButtons(asset:IAsset) : HTMLElement{
     return div;
 }
 
-async function assetAssignToUser(id:string) : Promise<void>{
-    const assetAssignApi : string = commonApi + `/assets/assign`;
-    const user: HTMLElement = document.getElementById('users')!;
-    let userId;
+function getIdFromUsername(user : HTMLElement) : number | undefined{
     const username = user!.value;
     for(let i : number=0;i<users.length;i++){
         if(users[i].username == username){
-            userId = users[i].id;
-            break;
+            return users[i].id;
         }
     }
+    return undefined;
+}
+
+async function assetAssignToUser(id:string) : Promise<void>{
+    const assetAssignApi : string = commonApi + `/assets/assign`;
+    const user: HTMLElement = document.getElementById('users')!;
+    const userId : number | undefined = getIdFromUsername(user);
     console.log(id,userId);
     const response : Response = await fetch(assetAssignApi, {
         headers: {
@@ -161,6 +304,9 @@ async function openAsset(asset : IAsset) : Promise<void> {
     const modalAssetOwner:HTMLElement = document.getElementById("modalAssetOwner")!;
     const tableBody : HTMLElement = document.getElementById('configTableBody')!;
     const dropdownForUsers : HTMLElement = document.getElementById('dropDownForUsers')!;
+    const closeBtn: HTMLElement = createAssignUnassignBtn(<HTMLElement>document.createElement('button'),"close","btn btn-secondary");
+    closeBtn.setAttribute('data-dismiss', 'modal');
+    closeBtn.textContent = 'Close';
     dropdownForUsers.innerHTML="";
     modalAssetId.textContent = asset.id.toString();
     modalAssetName.textContent = asset.name;
@@ -181,40 +327,25 @@ async function openAsset(asset : IAsset) : Promise<void> {
         tableBody.appendChild(row);
     }
     assignUnassignCloseBtnBody.innerHTML ="";
-    const divElement : HTMLElement = addAssignUnassignButtons(asset);
-    if(!asset.username) {
-        const assetAssignToUser: HTMLElement | null= document.getElementById('assetAssignToUser');
-        if(assetAssignToUser){
-            assetAssignToUser.parentNode!.removeChild(assetAssignToUser);
+    let divElementForButtons : HTMLElement = document.createElement('div');
+    const isAdmin : boolean = await checkAdminOrNot();
+    console.log(isAdmin)
+    if(isAdmin) {
+        const divElement: HTMLElement = addAssignUnassignButtons(asset);
+        if (!asset.username) {
+            const assetAssignToUser: HTMLElement | null = document.getElementById('assetAssignToUser');
+            if (assetAssignToUser) {
+                assetAssignToUser.parentNode!.removeChild(assetAssignToUser);
+            }
+            await getDataOfUser(dropdownForUsers)
         }
-        await getDataOfUser(dropdownForUsers)
+        divElementForButtons.appendChild(divElement);
     }
-    assignUnassignCloseBtnBody.appendChild(divElement);
+    const divForClose : HTMLElement = createAssignUnassignBtn(<HTMLElement>document.createElement('div'),"","modal-footer");
+    divForClose.appendChild(closeBtn);
+    divElementForButtons.appendChild(divForClose)
+    assignUnassignCloseBtnBody.appendChild(divElementForButtons);
     console.log(asset.username);
-}
-let users: IUser[];
-async function getDataOfUser(dropdownForUsers:HTMLElement) :Promise<void>{
-    const allUserApi : string = commonApi + '/users';
-    let selectTag : HTMLSelectElement = document.createElement('select');
-    const response : Response = await fetch(allUserApi, {
-        headers: {
-            'Authorization': `${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
-        }
-    });
-    users = await response.json();
-    console.log(users);
-    selectTag.setAttribute('name','users');
-    selectTag.setAttribute('id','users');
-    for(let i:number=0;i<users.length;i++){
-        const optionTag :HTMLOptionElement = document.createElement('option');
-        optionTag.setAttribute('value',users[i].username);
-        optionTag.textContent = users[i].username;
-        selectTag.appendChild(optionTag);
-    }
-    dropdownForUsers.appendChild(selectTag);
-    console.log(selectTag);
-    console.log(dropdownForUsers);
 }
 
 async function assetUnassign(id:string) : Promise<void>{

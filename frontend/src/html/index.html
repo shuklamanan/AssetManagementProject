@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <title>Assets - Asset-Management</title>
+    <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
@@ -57,14 +58,49 @@
                         <th scope="col">name</th>
                         <th scope="col">type</th>
                         <th scope="col">owner</th>
-                        <th scope="col">open</th>
-                        <th scope="col">delete</th>
+                        <th scope="col" id="openColumn">open</th>
+                        <th scope="col" id="closeColumn">delete</th>
                     </tr>
                     </thead>
                     <tbody id="assetTableBody">
                     </tbody>
                 </table>
 
+            </div>
+            <button type="button" class="btn btn-primary btn-lg" id="createAssets">Add Assets</button>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addAssetModal" tabindex="-1" aria-labelledby="assetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAssetModalLabel">Asset Details</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body" id="addAssetModalBody">
+                <p><strong>Name:</strong> <label for="addAssetAssetName"></label><input type="text" id="addAssetAssetName"></p>
+                <p><strong>Type:</strong> <label for="assetType"></label><select id="assetType">
+                    <option value="Hardware">Hardware</option>
+                    <option value="Software">Software</option>
+                </select></p>
+                <p id="addAssetAssignToUser"><strong>Owner:</strong> <div id="addAssetDropDownForUsers"></div> </p>
+                <h6>Config</h6>
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+                    </thead>
+                    <tbody id="addAssetConfigTableBody">
+                    </tbody>
+                </table>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btn-lg" id="addRowBtn">+</button>
+                    <button type="button" class="btn btn-primary btn-lg" id="addAssetBtn">Add Assets</button>
+                    <button type="button" class="btn btn-secondary btn-lg" data-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>

@@ -1,5 +1,5 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts'
-import IAsset, {IUser} from "../functions/interface.ts";
+import IAsset, {IUser} from "../functions/interfaces.ts";
 const commonApi:string = "http://localhost:5001";
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";

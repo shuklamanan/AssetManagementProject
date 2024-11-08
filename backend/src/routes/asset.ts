@@ -9,11 +9,11 @@ import {
 import {verifyRole} from "../middleware/verifyRole.ts";
 
 export const assetRoutes:Router = express.Router();
-
-assetRoutes.post('/',verifyJwt,verifyRole(['Admin']),createAssets)
-assetRoutes.get('/',verifyJwt,getAllAssets)
-assetRoutes.get('/history',verifyJwt,verifyRole(['Admin']),getAssetHistory)
-assetRoutes.post('/assign',verifyJwt,verifyRole(['Admin']),assetAssign)
-assetRoutes.post('/unassign/:id',verifyJwt,verifyRole(['Admin']),assetUnassign)
-assetRoutes.put('/:id',verifyJwt,verifyRole(['Admin']),updateAsset)
-assetRoutes.delete('/:id',verifyJwt,verifyRole(['Admin']),deleteAsset)
+assetRoutes.use(verifyJwt)
+assetRoutes.get('/',getAllAssets)
+assetRoutes.post('/',verifyRole(['Admin']),createAssets)
+assetRoutes.get('/history',verifyRole(['Admin']),getAssetHistory)
+assetRoutes.post('/assign',verifyRole(['Admin']),assetAssign)
+assetRoutes.post('/unassign/:id',verifyRole(['Admin']),assetUnassign)
+assetRoutes.put('/:id',verifyRole(['Admin']),updateAsset)
+assetRoutes.delete('/:id',verifyRole(['Admin']),deleteAsset)

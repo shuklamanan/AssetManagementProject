@@ -4,8 +4,7 @@ import {
     IAsset, IAssetDeleteOrNot, ICreateAssetQueryBody, IDecideHolderOfAsset,
     IMergeDetailsOfAssetAndUser,
     IUserAndAsset, IUserAndAssetAndAssetHistory, IUserDeleteOrNot,
-} from "../interfaces/requestWithUser.ts";
-
+} from "../interfaces.ts";
 
 export const createAssets = async (req: Request, res: Response): Promise<void> => {
     try {

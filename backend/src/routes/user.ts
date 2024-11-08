@@ -1,7 +1,5 @@
 import express, {Router} from 'express';
 import {
-    createUser,
-    loginUser,
     getRoles,
     getAllUsers,
     getProfileDetails,
@@ -12,11 +10,9 @@ import {verifyJwt} from "../middleware/verifyJWT.ts";
 import {verifyRole} from "../middleware/verifyRole.ts";
 
 export const userRoutes:Router = express.Router();
-
-userRoutes.post('/login',loginUser)
-userRoutes.post('/signup',createUser)
-userRoutes.get('/roles',verifyJwt,getRoles)
-userRoutes.get('/profile',verifyJwt,getProfileDetails);
-userRoutes.get('/',verifyJwt,verifyRole(['Admin']),getAllUsers)
-userRoutes.post('/',verifyJwt,verifyRole(['Admin']),createUserViaAdmin)
-userRoutes.delete('/:id',verifyJwt,verifyRole(['Admin']),deleteUser)
+userRoutes.use(verifyJwt)
+userRoutes.get('/roles',getRoles)
+userRoutes.get('/profile',getProfileDetails);
+userRoutes.get('/',verifyRole(['Admin']),getAllUsers)
+userRoutes.post('/',verifyRole(['Admin']),createUserViaAdmin)
+userRoutes.delete('/:id',verifyRole(['Admin']),deleteUser)

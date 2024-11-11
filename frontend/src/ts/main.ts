@@ -107,8 +107,7 @@ async function displayAssets(assets: IAsset[]) : Promise<void> {
         row.appendChild(openButtonCell);
         if(isAdmin) {
             const deleteButtonCell : HTMLTableCellElement = createOpenAndCloseButtons('btn btn-danger',"deleteButton",'#deleteModal','Delete');
-            const confirmDeleteAssetBtn: HTMLButtonElement = <HTMLButtonElement>document.getElementById('confirmDeleteAssetBtn')!;
-            confirmDeleteAssetBtn.onclick = () => deleteAsset(asset.id);
+            deleteButtonCell.onclick = () => deleteAsset(asset.id);
             row.appendChild(deleteButtonCell);
         }
         tbody.appendChild(row);

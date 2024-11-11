@@ -14,7 +14,7 @@ app.use(express.json());
 app.use('/users', authRoutes);
 app.use('/users', userRoutes);
 app.use('/assets',assetRoutes);
-app.use('/asset/request',assetRequestRoutes)
+app.use('/assets/request',assetRequestRoutes)
 const port = process.env.BACKEND_PORT || 5000
 app.listen(port, () =>
     console.log(`Server is live @ `+port)

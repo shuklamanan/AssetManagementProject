@@ -8,6 +8,7 @@ async function displayContentBasedOnRoles(roles: string[]): Promise<void> {
     if (!roles.includes('Admin')) {
         document.getElementById("user-nav")!.style.display = "none";
         document.getElementById("asset-history-nav")!.style.display = "none";
+        document.getElementById("asset-request-nav")!.style.display = "none";
     }
 }
 

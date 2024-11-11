@@ -1,7 +1,7 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts'
 import IAsset, {IUser} from "../functions/interface.ts";
 import {
-    assetAssignApi,
+    assetAssignApi, assetRequestApi,
     assetUnassignApi,
     createAssetApi,
     deleteAssetApi,
@@ -20,6 +20,7 @@ function displayContentBasedOnRoles(roles: string[]): void {
     if (!roles.includes('Admin')) {
         document.getElementById("user-nav")!.style.display = "none"
         document.getElementById("asset-history-nav")!.style.display = "none"
+        document.getElementById("asset-request-nav")!.style.display = "none";
     }
 }
 
@@ -72,7 +73,7 @@ async function fetchAssets(): Promise<void> {
 
 await fetchAssets()
 
-function createButtons(htmlNode: HTMLElement, idName: string, className: string): HTMLElement {
+export function createButtons(htmlNode: HTMLElement, idName: string, className: string): HTMLElement {
     htmlNode.setAttribute('id', idName);
     htmlNode.setAttribute('class', className);
     return htmlNode;
@@ -411,8 +412,8 @@ async function assetUnassign(id: string): Promise<void> {
     window.location.reload();
 }
 
-async function requestAsset(assetId: number) {
-    const response = await fetch("http://localhost:5001/asset/request", {
+async function requestAsset(assetId: number):Promise<void> {
+    const response : Response = await fetch(assetRequestApi, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

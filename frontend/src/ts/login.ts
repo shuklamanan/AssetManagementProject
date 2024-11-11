@@ -1,4 +1,4 @@
-import {IBodyStructureForAPI, ILoginToken} from "../functions/interface";
+import {IBodyStructureForAPI, ILoginToken} from "../functions/interface.ts";
 import {loginApi} from "../functions/api.ts";
 const commonHeaders  : HeadersInit =  {
     "Content-Type": "application/json",

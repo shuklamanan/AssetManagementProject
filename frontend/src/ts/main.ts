@@ -6,7 +6,7 @@ import {
     deleteAssetApi,
     getAllAssetsApi,
     getAllUsersApi,
-    getRolesApi, headers
+    getRolesApi, headers, updateAssetApi
 } from "../functions/api.ts";
 
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
@@ -162,11 +162,11 @@ function addRow() : void{
     const newRow : HTMLTableRowElement = document.createElement('tr');
 
     const idCell : HTMLTableCellElement = document.createElement('td');
-    idCell.innerHTML = "<input type='text' class='addAssetConfigDetails'>"
+    idCell.innerHTML = "<input type='text' class='addAssetConfigDetails' required>"
     newRow.appendChild(idCell);
 
     const nameCell: HTMLTableCellElement = document.createElement('td');
-    nameCell.innerHTML = "<input type='text' class='addAssetConfigDetails'>"
+    nameCell.innerHTML = "<input type='text' class='addAssetConfigDetails' required>"
     newRow.appendChild(nameCell);
 
     tableBody.appendChild(newRow);
@@ -186,11 +186,9 @@ async function addAsset(dropdown:HTMLElement):Promise<void> {
         "config": configObj
     }
     if(assignUser){
-        const userId:number | undefined = getIdFromUsername(<HTMLElement>dropdown!.firstChild);
+        const userId:number | undefined = getIdFromUsername(dropdown!.firstChild!.value);
         console.log(userId);
-        if(userId){
-            addAssetApiBody["userId"] = userId.toString();
-        }
+        addAssetApiBody["userId"] = userId!.toString();
     }
     const response :Response = await fetch(createAssetApi,{
         headers : headers,
@@ -232,24 +230,113 @@ function addAssignUnassignButtons(asset:IAsset) : HTMLElement{
     const div : HTMLElement = createAssignUnassignBtn(<HTMLElement>document.createElement('div'),"","modal-footer");
     const assignBtn: HTMLElement = createAssignUnassignBtn(<HTMLElement>document.createElement('button'),"assetAssignBtn","btn btn-primary");
     assignBtn.textContent = 'Assign';
+    const editBtn: HTMLElement = createAssignUnassignBtn(<HTMLElement>document.createElement('button'),"assetEditBtn","btn btn-primary");
+    editBtn.textContent = 'Edit';
+    const saveBtn: HTMLElement = createAssignUnassignBtn(<HTMLElement>document.createElement('button'),"assetEditBtn","btn btn-primary");
+    saveBtn.textContent = 'Save';
     const unassignBtn: HTMLElement = createAssignUnassignBtn(<HTMLElement>document.createElement('button'),"assetUnassignBtn","btn btn-danger");
     unassignBtn.textContent = 'Unassign';
+    const addRowDiv:HTMLElement = <HTMLElement>document.getElementById('addRowForEdit');
+    addRowDiv.innerHTML = "";
     div.appendChild(assignBtn);
     div.appendChild(unassignBtn);
+    div.appendChild(editBtn);
+    console.log(asset);
     if(asset.username){
         assignBtn.style.display = "none";
     }
     else{
         unassignBtn.style.display = "none";
     }
-
+    editBtn.onclick = () => editAssets(asset,saveBtn,div,editBtn);
     assignBtn.onclick = () => assetAssignToUser(asset.id.toString());
     unassignBtn.onclick = () => assetUnassign(asset.id.toString());
     return div;
 }
 
-function getIdFromUsername(user : HTMLElement) : number | undefined{
-    const username = user!.value;
+function addRowInEditSection() : void{
+    const tableBody:HTMLElement = document.getElementById('configTableBody')!;
+    const newRow : HTMLTableRowElement = document.createElement('tr');
+
+    const idCell : HTMLTableCellElement = document.createElement('td');
+    idCell.innerHTML = "<input type='text' class='editAssetConfigDetails' required>"
+    newRow.appendChild(idCell);
+
+    const nameCell: HTMLTableCellElement = document.createElement('td');
+    nameCell.innerHTML = "<input type='text' class='editAssetConfigDetails' required>"
+    newRow.appendChild(nameCell);
+
+    tableBody.appendChild(newRow);
+}
+
+async function saveAssetDetails(tableBody:HTMLElement) : Promise<void> {
+    const id :string = document.getElementById('modalAssetId')!.textContent!;
+    const name : HTMLElement = document.getElementById('editAssetName')!;
+    const assetType : HTMLElement = document.getElementById('editAssetType')!;
+    const editAssetConfigDetails:HTMLCollectionOf<Element> = tableBody.getElementsByTagName('input');
+    const assignedAssetOrNot:HTMLElement = document.getElementById('modalAssetOwner')!;
+    let configObj : Record<string, string> = {};
+    for(let i:number =0;i<editAssetConfigDetails.length;i+=2){
+        if(editAssetConfigDetails[i].value.trim().length && editAssetConfigDetails[i+1].value.trim().length){
+            configObj[editAssetConfigDetails[i].value] = editAssetConfigDetails[i+1].value;
+        }
+    }
+    let editAssetApiBody: Record<string,string | Record<string,string>> = {
+        "name": name.value,
+        "assetType": assetType.value,
+        "config": configObj
+    };
+    if(assignedAssetOrNot.textContent!='Unassigned'){
+        const userId:number | undefined = getIdFromUsername(assignedAssetOrNot.textContent!);
+        editAssetApiBody["userId"] = userId!.toString();
+    }
+    console.log(editAssetApiBody);
+    const updateApi : string = updateAssetApi + `${id}`;
+    const response :Response = await fetch(updateApi,{
+        headers : headers,
+        method : 'PUT',
+        body: JSON.stringify(editAssetApiBody)
+    });
+    if(response.status == 200){
+        window.location.reload();
+    }
+}
+
+function convertTdCellToInput(tableBody:HTMLElement) : void {
+    const tableDataCells:HTMLCollectionOf<Element> = tableBody.getElementsByTagName('td');
+    console.log(tableDataCells);
+    for(let i : number=0;i<tableDataCells.length ;i++){
+        const value : string = tableDataCells[i].textContent!;
+        tableDataCells[i].innerHTML = `<input type='text' class='editAssetConfigDetails' value="${value}">`;
+    }
+}
+
+function editAssets(asset:IAsset,saveBtn : HTMLElement,div:HTMLElement,editBtn:HTMLElement) : void {
+    const userDropdown:HTMLElement = document.getElementById('dropDownForUsers')!;
+    const addRowDiv:HTMLElement = <HTMLElement>document.getElementById('addRowForEdit');
+    const addRowBtnInEditSection : HTMLElement = createAssignUnassignBtn(<HTMLElement>document.createElement('button'),"addRowInEditSection","btn btn-primary");
+    const assetName:HTMLElement = document.getElementById('modalAssetName')!;
+    const assetType:HTMLElement =document.getElementById('modalAssetType')!;
+    const tableBody:HTMLElement = document.getElementById('configTableBody')!;
+    userDropdown.innerHTML = "";
+    div.removeChild(editBtn);
+    div.appendChild(saveBtn);
+    saveBtn.onclick = () => saveAssetDetails(tableBody);
+    addRowBtnInEditSection.innerHTML = "+";
+    addRowBtnInEditSection.onclick = () => addRowInEditSection();
+    addRowDiv.appendChild(addRowBtnInEditSection);
+    assetName.innerHTML = `<input type="text" value=${asset.name} id="editAssetName" required>`;
+    console.log(assetName)
+    assetType.innerHTML = `<select id="editAssetType">
+                    <option value="Hardware">Hardware</option>
+                    <option value="Software">Software</option>
+                </select>`;
+    const tableData:HTMLCollectionOf<Element>  = document.getElementsByClassName('addAssetConfigDetails')!;
+    console.log(tableBody)
+    convertTdCellToInput(tableBody);
+}
+
+function getIdFromUsername(username : string) : number | undefined{
     for(let i : number=0;i<users.length;i++){
         if(users[i].username == username){
             return users[i].id;
@@ -260,7 +347,7 @@ function getIdFromUsername(user : HTMLElement) : number | undefined{
 
 async function assetAssignToUser(id:string) : Promise<void>{
     const user: HTMLElement = document.getElementById('users')!;
-    const userId : number | undefined = getIdFromUsername(user);
+    const userId : number | undefined = getIdFromUsername(user!.value);
     console.log(id,userId);
     const response : Response = await fetch(assetAssignApi, {
         headers: headers,

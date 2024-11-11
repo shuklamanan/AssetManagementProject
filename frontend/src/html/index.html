@@ -79,7 +79,7 @@
                 <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             </div>
             <div class="modal-body" id="addAssetModalBody">
-                <p><strong>Name:</strong> <label for="addAssetAssetName"></label><input type="text" id="addAssetAssetName"></p>
+                <p><strong>Name:</strong> <label for="addAssetAssetName"></label><input type="text" id="addAssetAssetName" required></p>
                 <p><strong>Type:</strong> <label for="assetType"></label><select id="assetType">
                     <option value="Hardware">Hardware</option>
                     <option value="Software">Software</option>
@@ -118,7 +118,7 @@
                 <p><strong>Type:</strong> <span id="modalAssetType"></span></p>
                 <p><strong>Owner:</strong> <span id="modalAssetOwner"></span></p>
                 <p id="assetAssignToUser"> <div id="dropDownForUsers"></div> </p>
-                <h6>Config</h6>
+                <h6>Config<div id="addRowForEdit"></div></h6>
                 <table class="table table-bordered">
                     <thead>
                     <tr>

@@ -18,7 +18,7 @@ export const verifyJwt = async (req :Request,res:Response,next:NextFunction):Pro
         }
         req.body.user = user[0]
         next()
-    } catch (e) {
+    } catch (e:any) {
         res.sendStatus(401)
         return
     }

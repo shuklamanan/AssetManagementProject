@@ -41,8 +41,6 @@ export const getAllPendingRequests = async (req: Request, res: Response): Promis
     }
 }
 
-
-
 export const updateRequestStatus = async (req: Request, res: Response): Promise<void> => {
     try {
         const { status, id } = req.body
@@ -77,10 +75,9 @@ export const updateRequestStatus = async (req: Request, res: Response): Promise<
             return;
         }
         const assetId = assetResult[0].id
-        console.log(userId,assetId)
         let isPending = (await client.query("select 1 from asset_requests where status='Pending' and id=$1",[id])).rows.length
         if(!isPending){
-            res.status(400).json({ message: "request is already fullfilled " });
+            res.status(400).json({ message: "request is already fullfilled" });
             return;
         }
 
@@ -89,7 +86,7 @@ export const updateRequestStatus = async (req: Request, res: Response): Promise<
             [assetId]
         )).rows.length;
         if (!assignedCheck) {
-            res.status(400).json({ message: "asset is already assigned to someone" });
+            res.status(400).json({ message: "asset with id "+assetId+" is already assigned to someone" });
             return;
         }
         await client.query(

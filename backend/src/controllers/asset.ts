@@ -33,7 +33,6 @@ export const createAssets = async (req: Request, res: Response): Promise<void> =
 export const getAllAssets = async (req: Request, res: Response): Promise<void> => {
     try {
         let response : IUserAndAsset;
-        if (req.body.user.role.includes("Admin")) {
             response = await client.query(`SELECT 
                                                   a.id,
                                                   a.name,
@@ -51,24 +50,6 @@ export const getAllAssets = async (req: Request, res: Response): Promise<void> =
                                              AND u.archived_at IS NULL
                                           ORDER BY a.id
             `);
-        } else {
-            response = await client.query(`SELECT a.id,
-                                                  a.name,
-                                                  a.asset_type,
-                                                  a.user_id,
-                                                  a.config,
-                                                  u.username,
-                                                  u.first_name,
-                                                  u.last_name,
-                                                  u.email,
-                                                  u.phone_number
-                                           FROM assets a
-                                                    LEFT JOIN users u ON u.id = a.user_id
-                                           WHERE u.username = $1
-                                             AND a.archived_at IS NULL
-                                             AND u.archived_at IS NULL ORDER BY a.id
-            `, [req.body.user.username]);
-        }
         const allAssets : IMergeDetailsOfAssetAndUser[] | undefined = response?.rows;
         res.status(200).json(allAssets ?? []);
         return;

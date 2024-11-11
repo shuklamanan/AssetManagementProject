@@ -412,7 +412,7 @@ async function assetUnassign(id: string): Promise<void> {
 }
 
 async function requestAsset(assetId: number) {
-    const response = await fetch("http://localhost:5001/assetRequest", {
+    const response = await fetch("http://localhost:5001/asset/request", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

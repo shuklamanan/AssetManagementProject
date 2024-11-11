@@ -5,6 +5,8 @@ import {
     IMergeDetailsOfAssetAndUser, IMergeDetailsOfAssetAndUserAndAssetHistory,
     IUserAndAsset, IUserAndAssetAndAssetHistory, IUserDeleteOrNot,
 } from "../interfaces.ts";
+import {Asset} from "../viewModels/assets.ts";
+import {AssetHistory} from "../viewModels/assetHistory.ts";
 
 export const createAssets = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -32,8 +34,8 @@ export const createAssets = async (req: Request, res: Response): Promise<void> =
 
 export const getAllAssets = async (req: Request, res: Response): Promise<void> => {
     try {
-        let response : IUserAndAsset;
-            response = await client.query(`SELECT 
+        let response : IMergeDetailsOfAssetAndUser[];
+            response = (await client.query(`SELECT 
                                                   a.id,
                                                   a.name,
                                                   a.asset_type,
@@ -49,8 +51,8 @@ export const getAllAssets = async (req: Request, res: Response): Promise<void> =
                                            WHERE a.archived_at IS NULL
                                              AND u.archived_at IS NULL
                                           ORDER BY a.id
-            `);
-        const allAssets : IMergeDetailsOfAssetAndUser[] | undefined = response?.rows;
+            `)).rows;
+        const allAssets  = response.map(asset=>new Asset(asset));
         res.status(200).json(allAssets ?? []);
         return;
     } catch (error: any) {
@@ -132,9 +134,9 @@ export const assetUnassign = async (req: Request, res: Response): Promise<void> 
 }
 export const getAssetHistory = async (req: Request, res: Response): Promise<void> => {
     try {
-        //TODO asset history view model
         const assetsHistory : IMergeDetailsOfAssetAndUserAndAssetHistory[] = (await client.query("SELECT ah.user_id, u.username,a.id as asset_id,a.name as asset_name,ah.assigned_at,ah.unassigned_at FROM asset_history ah LEFT JOIN users u  ON u.id = ah.user_id JOIN assets a ON ah.asset_id = a.id  ORDER BY ah.id")).rows
-        res.status(200).json(assetsHistory);
+        const viewAssetsHistory = assetsHistory.map((assetHistory)=>new AssetHistory(assetHistory))
+        res.status(200).json(viewAssetsHistory);
         return;
     } catch (error: any) {
         res.status(500).json({message: error?.message});

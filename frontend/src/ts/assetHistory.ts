@@ -15,6 +15,14 @@ document.getElementById("logout")!.addEventListener('click',() : void=>{
     location.href = "/src/html/login.html"
 })
 
+function appendChildToParent(parentNode: HTMLElement, ...childNodes: HTMLElement[]): HTMLElement {
+    for (const child of childNodes) {
+        parentNode.appendChild(child);
+    }
+    return parentNode;
+}
+
+
 async function fetchAssetHistory(): Promise<void> {
     const response: Response = await fetch(assetHistoryApi, {
         headers: headers,
@@ -25,30 +33,27 @@ async function fetchAssetHistory(): Promise<void> {
 }
 
 function displayAssetHistory(assetHistory: IAssetHistory[]): void {
-    const tbody : HTMLElement = <HTMLElement>document.querySelector('#assetHistoryTable tbody');
+    let tbody : HTMLElement = <HTMLElement>document.getElementById('asset-history');
     tbody.innerHTML = '';
     assetHistory.forEach(entry => {
-        const row: HTMLTableRowElement = document.createElement('tr');
+        let row: HTMLElement = document.createElement('tr');
 
-        const usernameCell : HTMLTableCellElement = document.createElement('td');
+        const usernameCell : HTMLElement = document.createElement('td');
         usernameCell.textContent = entry.username || 'N/A';
-        row.appendChild(usernameCell);
 
-        const assetNameCell : HTMLTableCellElement = document.createElement('td');
+        const assetNameCell : HTMLElement = document.createElement('td');
         assetNameCell.textContent = entry.assetName;
-        row.appendChild(assetNameCell);
 
-        const assignedAtCell : HTMLTableCellElement = document.createElement('td');
+        const assignedAtCell : HTMLElement = document.createElement('td');
         assignedAtCell.textContent = entry.assignedAt
             ? new Date(entry.assignedAt).toLocaleString()
             : 'N/A';
-        row.appendChild(assignedAtCell);
 
-        const unassignedAtCell : HTMLTableCellElement = document.createElement('td');
+        const unassignedAtCell : HTMLElement = document.createElement('td');
         unassignedAtCell.textContent = entry.unassignedAt
             ? new Date(entry.unassignedAt).toLocaleString()
             : 'N/A';
-        row.appendChild(unassignedAtCell);
+        row = appendChildToParent(row,usernameCell,assetNameCell,assignedAtCell,unassignedAtCell);
 
         tbody.appendChild(row);
     });

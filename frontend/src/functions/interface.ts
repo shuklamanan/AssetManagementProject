@@ -6,6 +6,19 @@ export default interface IAsset {
     config: Record<string, string>;
 }
 
+export interface IAssetRequest {
+    id: number,
+    assetId: number,
+    userId:number,
+    assetName: string;
+    username: string | null;
+}
+
+export interface IAssetRequestStatusUpdate{
+    id:number,
+    status:string
+}
+
 export interface IUser {
     id?:number,
     username: string,

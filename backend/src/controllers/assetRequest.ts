@@ -1,23 +1,22 @@
 import client from "../../postgresConfig.ts"
 import {Request, Response} from "express";
-import {IPendingAssetRequest} from "../interfaces.ts";
+import {ICreateAssetQueryBody,IPendingAssetRequest} from "../interfaces.ts";
 
-export const createAssetRequest = async (req: Request, res: Response): Promise<void> => {
-    const {assetId}: { assetId: number } = req.body;
+export const createAssetRequest = async (req: Request, res: Response):Promise<void> => {
+    const { assetId }:{assetId:number} = req.body;
     try {
-        const assetCheckResult: number = (await client.query(`SELECT 1
-                                                              FROM assets
-                                                              WHERE id = $1
-                                                                AND archived_at IS NULL`, [assetId])).rows.length
+        const assetCheckResult:number = (await client.query(`SELECT 1 FROM assets WHERE id = $1 AND archived_at IS NULL`,[assetId])).rows.length
 
         if (!assetCheckResult) {
-            res.status(400).json({message: "Cannot create request: Asset is archived or does not exist"});
+            res.status(400).json({ message: "Cannot create request: Asset is archived or does not exist" });
             return;
         }
-
-
-        await client.query(`INSERT INTO asset_requests (asset_id, user_id, status)
-                            VALUES ($1, $2, 'Pending')`, [assetId, req.body.user.id]);
+        const requestOfSameUserForSameAsset : number = (await client.query(`SELECT 1 FROM asset_requests WHERE status='Pending' AND user_id = $1 AND asset_id = $2`,[req.body.user.id,assetId])).rows.length;
+        if(requestOfSameUserForSameAsset){
+           res.status(400).json({message: "You request is not approved yet."});
+           return;
+        }
+        await client.query(`INSERT INTO asset_requests (asset_id, user_id, status) VALUES ($1, $2, 'Pending')`, [assetId, req.body.user.id]);
         res.status(201).json({message: "Asset request created successfully",});
     } catch (error: any) {
         res.status(500).json({message: error?.message});
@@ -27,16 +26,15 @@ export const createAssetRequest = async (req: Request, res: Response): Promise<v
 
 export const getAllPendingRequests = async (req: Request, res: Response): Promise<void> => {
     try {
-        const result: IPendingAssetRequest[] = (await client.query(`SELECT ar.id,
-                                                                           ar.asset_id AS "assetId",
-                                                                           ar.user_id  AS "userId",
-                                                                           ar.status,
-                                                                           a.name      AS "assetName",
-                                                                           u.username  as "username"
-                                                                    FROM asset_requests ar
-                                                                             INNER JOIN assets a ON ar.asset_id = a.id
-                                                                             INNER JOIN users u ON ar.user_id = u.id
-                                                                    WHERE ar.status = 'Pending'`)).rows
+        const result:IPendingAssetRequest[] = (await client.query(`SELECT ar.id,
+                                                                          ar.asset_id AS "assetId",
+                                                                          ar.user_id  AS "userId",
+                                                                          a.name      AS "assetName",
+                                                                          u.username  as "username"
+                                                                   FROM asset_requests ar
+                                                                            INNER JOIN assets a ON ar.asset_id = a.id
+                                                                            INNER JOIN users u ON ar.user_id = u.id
+                                                                   WHERE ar.status = 'Pending'`)).rows
         res.status(200).json(result);
         return;
     } catch (error: any) {
@@ -47,85 +45,70 @@ export const getAllPendingRequests = async (req: Request, res: Response): Promis
 
 export const updateRequestStatus = async (req: Request, res: Response): Promise<void> => {
     try {
-        const {status, id} = req.body
+        const { status, id } = req.body
         if (status !== 'Approved' && status !== 'Disapproved') {
-            res.status(400).json({message: "Invalid status value"});
+            res.status(400).json({ message: "Invalid status value" });
             return;
         }
         if (status === 'Disapproved') {
-            await client.query(`UPDATE asset_requests
-                                SET status = $1
-                                WHERE id = $2`, [status, id]);
-            res.status(200).json({message: "Asset request disapproved successfully"});
+            await client.query(`UPDATE asset_requests SET status = $1 WHERE id = $2`, [status, id]);
+            res.status(200).json({ message: "Asset request disapproved successfully" });
             return;
         }
-        const userResult: { id: number }[] = (await client.query(
-            `SELECT u.id
-             FROM users u
-                      JOIN asset_requests ar ON u.id = ar.user_id
-             WHERE ar.id = $1
-               AND u.archived_at IS NULL`,
+        const userResult: { id:number }[] = (await client.query(
+            `SELECT u.id FROM users u 
+            JOIN asset_requests ar ON u.id = ar.user_id 
+            WHERE ar.id = $1 AND u.archived_at IS NULL`,
             [id]
         )).rows
-        if (!userResult.length) {
-            res.status(400).json({message: "user associated with request is archived"});
+        if(!userResult.length){
+            res.status(400).json({ message: "user associated with request is archived" });
             return;
         }
         const userId = userResult[0].id
-        const assetResult: { id: number }[] = (await client.query(
-            `SELECT a.id
-             FROM assets a
-                      JOIN asset_requests ar ON a.id = ar.asset_id
-             WHERE ar.id = $1
-               AND a.archived_at IS NULL`,
+        const assetResult: { id:number }[] = (await client.query(
+            `SELECT a.id FROM assets a 
+            JOIN asset_requests ar ON a.id = ar.asset_id 
+            WHERE ar.id = $1 AND a.archived_at IS NULL`,
             [id]
         )).rows
-        if (!assetResult.length) {
-            res.status(400).json({message: "asset associated with request is archived"});
+        if(!assetResult.length){
+            res.status(400).json({ message: "asset associated with request is archived" });
             return;
         }
         const assetId = assetResult[0].id
-        let isPending = (await client.query("select 1 from asset_requests where status='Pending' and id=$1", [id])).rows.length
-        if (!isPending) {
-            res.status(400).json({message: "request is already fullfilled"});
+        let isPending = (await client.query("select 1 from asset_requests where status='Pending' and id=$1",[id])).rows.length
+        if(!isPending){
+            res.status(400).json({ message: "request is already fullfilled" });
             return;
         }
 
         const assignedCheck = (await client.query(
-            `SELECT 1
-             FROM assets
-             WHERE id = $1
-               AND user_id IS NULL`,
+            `SELECT 1 FROM assets WHERE id = $1 AND user_id IS NULL`,
             [assetId]
         )).rows.length;
         if (!assignedCheck) {
-            res.status(400).json({message: "asset with id " + assetId + " is already assigned to someone"});
+            res.status(400).json({ message: "asset with id "+assetId+" is already assigned to someone" });
             return;
         }
         await client.query(
-            `UPDATE assets
-             SET user_id = $1
-             WHERE id = $2`,
+            `UPDATE assets SET user_id = $1 WHERE id = $2`,
             [userId, assetId]
         );
         await client.query(
-            `INSERT INTO asset_history (asset_id, user_id, assigned_by, assigned_at, unassigned_at)
-             VALUES ($1, $2, $3, NOW(), NULL)`,
+            `INSERT INTO asset_history (asset_id, user_id, assigned_by, assigned_at, unassigned_at) 
+            VALUES ($1, $2, $3, NOW(), NULL)`,
             [assetId, userId, req.body.user.id]
         );
 
         await client.query(
-            `UPDATE asset_requests
-             SET status = $1
-             WHERE id = $2`,
+            `UPDATE asset_requests SET status = $1 WHERE id = $2`,
             [status, id]
         );
 
-        res.status(200).json({message: "Asset request approved and asset assigned successfully"});
+        res.status(200).json({ message: "Asset request approved and asset assigned successfully" });
     } catch (error: any) {
         res.status(500).json({message: error?.message});
         return;
     }
 }
-
-

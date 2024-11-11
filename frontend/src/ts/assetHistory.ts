@@ -35,18 +35,18 @@ function displayAssetHistory(assetHistory: IAssetHistory[]): void {
         row.appendChild(usernameCell);
 
         const assetNameCell : HTMLTableCellElement = document.createElement('td');
-        assetNameCell.textContent = entry.asset_name;
+        assetNameCell.textContent = entry.assetName;
         row.appendChild(assetNameCell);
 
         const assignedAtCell : HTMLTableCellElement = document.createElement('td');
-        assignedAtCell.textContent = entry.assigned_at
-            ? new Date(entry.assigned_at).toLocaleString()
+        assignedAtCell.textContent = entry.assignedAt
+            ? new Date(entry.assignedAt).toLocaleString()
             : 'N/A';
         row.appendChild(assignedAtCell);
 
         const unassignedAtCell : HTMLTableCellElement = document.createElement('td');
-        unassignedAtCell.textContent = entry.unassigned_at
-            ? new Date(entry.unassigned_at).toLocaleString()
+        unassignedAtCell.textContent = entry.unassignedAt
+            ? new Date(entry.unassignedAt).toLocaleString()
             : 'N/A';
         row.appendChild(unassignedAtCell);
 

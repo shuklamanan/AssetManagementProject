@@ -1,7 +1,8 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts'
 import IAsset, {IUser} from "../functions/interface.ts";
 import {
-    assetAssignApi, assetRequestApi,
+    assetAssignApi,
+    assetRequestApi,
     assetUnassignApi,
     createAssetApi,
     deleteAssetApi,
@@ -79,7 +80,7 @@ export function createButtons(htmlNode: HTMLElement, idName: string, className: 
     return htmlNode;
 }
 
-function createOpenAndCloseButtons(className: string, idName: string, targetModal: string, buttonContent: string,disabled=false): HTMLElement {
+function createOpenAndCloseButtons(className: string, idName: string, targetModal: string, buttonContent: string, disabled = false): HTMLElement {
     let buttonCell: HTMLElement = document.createElement('td');
     const button: HTMLElement = createButtons(document.createElement('button'), idName, className);
     button.type = 'button';
@@ -87,8 +88,8 @@ function createOpenAndCloseButtons(className: string, idName: string, targetModa
     button.setAttribute('data-toggle', 'modal');
     button.setAttribute('data-target', targetModal);
     buttonCell = appendChildToParent(buttonCell, button);
-    if(disabled){
-        button.disabled=true
+    if (disabled) {
+        button.disabled = true
     }
     return buttonCell;
 }
@@ -107,7 +108,7 @@ async function displayAssets(assets: IAsset[]): Promise<void> {
         nameCell.textContent = asset.name;
 
         const typeCell: HTMLElement = document.createElement('td');
-        typeCell.textContent = asset.asset_type;
+        typeCell.textContent = asset.assetType;
 
         const ownerCell: HTMLElement = document.createElement('td');
         ownerCell.textContent = asset.username || 'Unassigned';
@@ -119,13 +120,13 @@ async function displayAssets(assets: IAsset[]): Promise<void> {
             const deleteButtonCell: HTMLElement = createOpenAndCloseButtons('btn btn-danger', "deleteButton", '#deleteModal', 'Delete');
             deleteButtonCell.onclick = () => deleteAsset(asset.id);
             row = appendChildToParent(row, deleteButtonCell);
-        }else{
-            if(!asset.username){
+        } else {
+            if (!asset.username) {
                 const requestButtonCell: HTMLElement = createOpenAndCloseButtons('btn btn-secondary', "requestButton", '#requestModal', 'Request Asset');
                 requestButtonCell.onclick = () => requestAsset(asset.id);
                 row = appendChildToParent(row, requestButtonCell);
-            }else{
-                const requestButtonCell: HTMLElement = createOpenAndCloseButtons('btn btn-secondary', "requestButton", '#requestModal', 'N/A',true);
+            } else {
+                const requestButtonCell: HTMLElement = createOpenAndCloseButtons('btn btn-secondary', "requestButton", '#requestModal', 'N/A', true);
                 row = appendChildToParent(row, requestButtonCell);
             }
         }
@@ -369,7 +370,7 @@ async function openAsset(asset: IAsset): Promise<void> {
     dropdownForUsers.innerHTML = "";
     modalAssetId.textContent = asset.id.toString();
     modalAssetName.textContent = asset.name;
-    modalAssetType.textContent = asset.asset_type;
+    modalAssetType.textContent = asset.assetType;
     modalAssetOwner.textContent = asset.username || 'Unassigned';
     tableBody.innerHTML = "";
     for (let key in asset.config) {
@@ -412,8 +413,8 @@ async function assetUnassign(id: string): Promise<void> {
     window.location.reload();
 }
 
-async function requestAsset(assetId: number):Promise<void> {
-    const response : Response = await fetch(assetRequestApi, {
+async function requestAsset(assetId: number): Promise<void> {
+    const response: Response = await fetch(assetRequestApi, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

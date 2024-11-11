@@ -1,7 +1,7 @@
 export default interface IAsset {
     id: number;
     name: string;
-    asset_type: string;
+    assetType: string;
     username: string | null;
     config: Record<string, string>;
 }
@@ -31,12 +31,12 @@ export interface IUser {
 }
 
 export interface IAssetHistory {
-    user_id: string | null;
+    userId: string | null;
     username: string | null;
-    asset_id: number;
-    asset_name: string;
-    assigned_at: string | null;
-    unassigned_at: string | null;
+    assetId: number;
+    assetName: string;
+    assignedAt: string | null;
+    unassignedAt: string | null;
 }
 
 export interface IBodyStructureForAPI{

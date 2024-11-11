@@ -18,6 +18,8 @@ export const assetAssignApi:string = assetApi + "assign/";
 export const assetUnassignApi:string = assetApi + "unassign/";
 export const updateAssetApi:string = assetApi;
 export const deleteAssetApi:string = assetApi;
+export const assetRequestApi:string = assetApi + "request/";
+export const assetUpdateStatusApi:string = assetApi + "request/status/";
 
 export const headers :Record<string,string> = {
     'Authorization': `${localStorage.getItem('token')}`,

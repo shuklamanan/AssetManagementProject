@@ -1,15 +1,15 @@
 import {Request, Response} from "express";
-import {
-    ICreateUserQueryBody,
-    ICreateUserRequestBody,
-    ILoginUserRequestBody,
-    IUser
-} from "../interfaces.ts";
+import {ICreateUserQueryBody, ICreateUserRequestBody, ILoginUserRequestBody} from "../interfaces.ts";
 import client from "../../postgresConfig";
 import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+import {generateOTP} from "../functions/generateOTP.ts";
 import jwt, {JwtPayload} from "jsonwebtoken";
-import {hashPassword} from "../functions/hashPassword";
 import {isValidPassword} from "../functions/validPassword";
+import {isValidEmail} from "../functions/isValidEmail.ts";
+import {User} from "../viewModels/users.ts";
+
+dotenv.config()
 const generateToken = (payload: JwtPayload) => {
     const secretKey: string = process.env.ACCESS_TOKEN_SECRET ?? ""; // Replace with your own secret key
     const options = {
@@ -18,7 +18,12 @@ const generateToken = (payload: JwtPayload) => {
     return jwt.sign(payload, secretKey, options);
 };
 
-
+let tempSignupUserObj:any = {}
+let tempUsernameOTPObj:any = {}
+setInterval(() => {
+    tempSignupUserObj = {}
+    tempUsernameOTPObj = {}
+}, 100000)
 export const createUser = async (req: Request, res: Response): Promise<void> => {
     try {
         let {
@@ -47,8 +52,26 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
             res.status(400).json({message: "some required fields are missing in req"})
             return;
         }
-        await client.query("insert into users(username, first_name, last_name, role, email, password, phone_number, department, date_of_birth) values ($1,$2,$3,Array ['Employee']::role[],$4,$5,$6,$7,$8)", [username, firstName, lastName, email, await hashPassword(password), phoneNumber, department ?? null, dateOfBirth ?? null])
-        res.status(201).json({message: "user created successfully"});
+        if (!isValidEmail(email, process.env.DOMAIN??'noovosoft')) {
+            res.status(400).json({message: "only domain name " + process.env.DOMAIN + " is allowed"})
+            return;
+        }
+        const otp = generateOTP(4)
+        tempUsernameOTPObj[username] = otp
+        tempSignupUserObj[username] = new User({
+            password: password,
+            username: username,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            role: ['Employee'],
+            phone_number: phoneNumber,
+            department: department ?? null,
+            date_of_birth: dateOfBirth,
+            created_at: new Date()
+        })
+        // await client.query("insert into users(username, first_name, last_name, role, email, password, phone_number, department, date_of_birth) values ($1,$2,$3,Array ['Employee']::role[],$4,$5,$6,$7,$8)", [username, firstName, lastName, email, await hashPassword(password), phoneNumber, department ?? null, dateOfBirth ?? null])
+        res.status(200).json({message: "further auth needed through OTP"});
         return;
     } catch (error: any) {
         res.status(500).json({message: error?.message});
@@ -62,7 +85,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             res.status(400).json({message: "some fields are missing in req"})
             return
         }
-        let response : ICreateUserRequestBody[] = (await client.query("select * from users where username=$1 and archived_at is null", [username])).rows
+        let response: ICreateUserRequestBody[] = (await client.query("select * from users where username=$1 and archived_at is null", [username])).rows
         if (response.length === 0) {
             res.status(404).json({message: "user not found"})
             return
@@ -72,7 +95,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             res.status(401).json({message: "user auth failed incorrect username or password"})
             return
         }
-        let payload : JwtPayload = { id: user.id }
+        let payload: JwtPayload = {id: user.id}
         let token: string = generateToken(payload)
         res.status(200).json({token: token});
         return

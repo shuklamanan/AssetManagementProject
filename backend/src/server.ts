@@ -5,7 +5,7 @@ import {userRoutes} from './routes/user.ts';
 import {assetRoutes} from './routes/asset.ts';
 import {authRoutes} from './routes/auth.ts';
 import {assetRequestRoutes} from "./routes/assetRequest.ts";
-
+//TODO interface.ts refactor
 dotenv.config()
 const app = express();
 app.use(cors());

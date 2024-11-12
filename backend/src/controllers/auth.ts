@@ -8,7 +8,8 @@ import jwt, {JwtPayload} from "jsonwebtoken";
 import {isValidPassword} from "../functions/validPassword";
 import {isValidEmail} from "../functions/isValidEmail.ts";
 import {User} from "../viewModels/users.ts";
-
+import mailOTP from "../functions/mailOTP.ts";
+import {hashPassword} from "../functions/hashPassword.ts";
 dotenv.config()
 const generateToken = (payload: JwtPayload) => {
     const secretKey: string = process.env.ACCESS_TOKEN_SECRET ?? ""; // Replace with your own secret key
@@ -18,12 +19,13 @@ const generateToken = (payload: JwtPayload) => {
     return jwt.sign(payload, secretKey, options);
 };
 
-let tempSignupUserObj:any = {}
-let tempUsernameOTPObj:any = {}
+let tempSignupUserObj: { [key:string]:ICreateUserRequestBody } = {}
+let tempUsernameOTPObj: { [key:string]:number } = {}
+//if we have used redis or something similar this would be much more efficient but this works fine as well
 setInterval(() => {
     tempSignupUserObj = {}
     tempUsernameOTPObj = {}
-}, 100000)
+}, 1000000)
 export const createUser = async (req: Request, res: Response): Promise<void> => {
     try {
         let {
@@ -52,26 +54,27 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
             res.status(400).json({message: "some required fields are missing in req"})
             return;
         }
-        if (!isValidEmail(email, process.env.DOMAIN??'noovosoft')) {
+        if (!isValidEmail(email, process.env.DOMAIN??'gmail')) {
             res.status(400).json({message: "only domain name " + process.env.DOMAIN + " is allowed"})
             return;
         }
         const otp = generateOTP(4)
-        tempUsernameOTPObj[username] = otp
-        tempSignupUserObj[username] = new User({
-            password: password,
+        tempUsernameOTPObj[`${username}`] = otp
+        tempSignupUserObj[`${username}`] = {
             username: username,
             first_name: firstName,
             last_name: lastName,
             email: email,
-            role: ['Employee'],
+            password: password,
+            role : ['Employee'],
             phone_number: phoneNumber,
-            department: department ?? null,
+            department: department??null,
             date_of_birth: dateOfBirth,
-            created_at: new Date()
-        })
-        // await client.query("insert into users(username, first_name, last_name, role, email, password, phone_number, department, date_of_birth) values ($1,$2,$3,Array ['Employee']::role[],$4,$5,$6,$7,$8)", [username, firstName, lastName, email, await hashPassword(password), phoneNumber, department ?? null, dateOfBirth ?? null])
-        res.status(200).json({message: "further auth needed through OTP"});
+        }
+        let token = generateToken({username:username})
+        mailOTP(otp,email,"OTP verification")
+        console.log(tempUsernameOTPObj,tempSignupUserObj)
+        res.status(200).json({OTPtoken:token});
         return;
     } catch (error: any) {
         res.status(500).json({message: error?.message});
@@ -91,7 +94,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             return
         }
         let user: ICreateUserRequestBody = response[0]
-        if (!bcrypt.compareSync(password, user.password)) {
+        if (!bcrypt.compareSync(password, user.password??"")) {
             res.status(401).json({message: "user auth failed incorrect username or password"})
             return
         }
@@ -99,6 +102,23 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         let token: string = generateToken(payload)
         res.status(200).json({token: token});
         return
+    } catch (error: any) {
+        res.status(500).json({message: error?.message});
+        return
+    }
+};
+export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
+    try {
+        let username:string = req.body.username
+        let otp:number = Number(req.body.otp)
+        console.log(otp,tempUsernameOTPObj[`${username}`])
+        if(tempUsernameOTPObj[`${username}`]===otp){
+            let user = tempSignupUserObj[`${username}`]
+            await client.query("insert into users(username, first_name, last_name, role, email, password, phone_number, department, date_of_birth) values ($1,$2,$3,Array ['Employee']::role[],$4,$5,$6,$7,$8)", [username, user.first_name, user.last_name, user.email, await hashPassword(user.password), user.phone_number, user.department ?? null, user.date_of_birth ?? null])
+            res.json({message:"signup successful"})
+            return
+        }
+        res.json({message:"signup failed"})
     } catch (error: any) {
         res.status(500).json({message: error?.message});
         return

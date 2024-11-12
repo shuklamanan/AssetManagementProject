@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your OTP Code</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .otp-code {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <h2 class="text-center text-primary mb-4">Asset Management System</h2>
+    <p>Hi,</p>
+    <p>Thank you for signing up!</p>
+
+    <div class="text-center">
+        <p class="otp-code"><%= data.otp %></p>
+    </div>
+
+    <p>Please enter this OTP within 10 minutes</p>
+    <hr>
+    <p class="text-center text-muted">Thank you,<br>Asset Management Team</p>
+</div>
+</body>
+</html>

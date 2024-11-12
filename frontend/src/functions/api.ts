@@ -2,6 +2,8 @@ const api: string = "http://localhost:5001/";
 const userApi:string = api + "users/";
 const assetApi:string =  api + "assets/";
 
+export const verifyUserViaOtpApi:string = userApi + "verify/";
+
 export const loginApi:string = userApi + "login/";
 export const signupApi:string = userApi + "signup/";
 

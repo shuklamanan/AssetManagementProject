@@ -2,6 +2,7 @@ import fetchUserRoles from '../functions/fetchUserRoles.ts'
 import IAsset, {IUser} from "../functions/interface.ts";
 import {
     assetAssignApi,
+    assetPendingApi,
     assetRequestApi,
     assetUnassignApi,
     createAssetApi,
@@ -94,11 +95,22 @@ function createOpenAndCloseButtons(className: string, idName: string, targetModa
     return buttonCell;
 }
 
+async function pendingRequests(asset : IAsset):Promise<boolean>{
+    console.log(asset);
+    const pendingAssetsApi:string = assetPendingApi + `${asset.id}`;
+    const response : Response = await fetch(pendingAssetsApi,{
+        headers:headers,
+    })
+    const res = await response.json();
+    return res.message == "Your request is still pending";
+}
+
 async function displayAssets(assets: IAsset[]): Promise<void> {
     let tbody: HTMLElement = document.getElementById('assetTableBody') as HTMLElement;
     const addAssetBtn: HTMLElement | null = document.getElementById('createAssets');
     const isAdmin: boolean = await checkAdminOrNot();
-    assets.forEach(asset => {
+    console.log(assets);
+    for (const asset of assets) {
         let row: HTMLElement = document.createElement('tr');
 
         const idCell: HTMLElement = document.createElement('td');
@@ -111,27 +123,32 @@ async function displayAssets(assets: IAsset[]): Promise<void> {
         typeCell.textContent = asset.assetType;
 
         const ownerCell: HTMLElement = document.createElement('td');
-        ownerCell.textContent = asset.username || 'Unassigned';
 
         const openButtonCell: HTMLElement = createOpenAndCloseButtons('btn btn-primary', "openButton", '#assetModal', 'Open');
         openButtonCell.firstChild!.onclick = () => openAsset(asset);
-        row = appendChildToParent(row, idCell, nameCell, typeCell, ownerCell, openButtonCell);
         if (isAdmin) {
             const deleteButtonCell: HTMLElement = createOpenAndCloseButtons('btn btn-danger', "deleteButton", '#deleteModal', 'Delete');
             deleteButtonCell.onclick = () => deleteAsset(asset.id);
-            row = appendChildToParent(row, deleteButtonCell);
+            ownerCell.textContent = asset.username || "Unassigned";
+            row = appendChildToParent(row, idCell, nameCell, typeCell, ownerCell, openButtonCell,deleteButtonCell);
         } else {
             if (!asset.username) {
-                const requestButtonCell: HTMLElement = createOpenAndCloseButtons('btn btn-secondary', "requestButton", '#requestModal', 'Request Asset');
-                requestButtonCell.onclick = () => requestAsset(asset.id);
-                row = appendChildToParent(row, requestButtonCell);
-            } else {
-                const requestButtonCell: HTMLElement = createOpenAndCloseButtons('btn btn-secondary', "requestButton", '#requestModal', 'N/A', true);
-                row = appendChildToParent(row, requestButtonCell);
+                const pendingRequestOrNot : boolean = await pendingRequests(asset);
+                console.log(asset.id,pendingRequestOrNot)
+                const requestButtonCell:HTMLElement = createOpenAndCloseButtons('btn btn-secondary', "requestButton", '#requestModal', 'Request Asset');
+                if(pendingRequestOrNot) {
+                    requestButtonCell.textContent = 'Pending...';
+                    requestButtonCell.disabled = true;
+                }
+                else{
+                    requestButtonCell.onclick = () => requestAsset(asset.id);
+                }
+                ownerCell.textContent = "Unassigned";
+                row = appendChildToParent(row, idCell, nameCell, typeCell, ownerCell, openButtonCell,requestButtonCell);
             }
         }
         tbody = appendChildToParent(tbody, row);
-    });
+    }
     if (isAdmin) {
         const dropdownForAssetAssign: HTMLElement = document.createElement('div')
         const addAssetAssetName: HTMLElement = document.getElementById('addAssetAssetName')!;
@@ -429,6 +446,7 @@ async function requestAsset(assetId: number): Promise<void> {
         return;
     }
     alert("Asset request created successfully");
+    window.location.reload();
 }
 
 

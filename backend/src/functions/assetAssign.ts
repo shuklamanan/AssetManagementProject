@@ -1,16 +1,16 @@
 import nodemailer from "nodemailer";
 import ejs from 'ejs'
 import dotenv from 'dotenv'
+import {IAsset} from "../interfaces";
 
 dotenv.config()
-export default async function mailOTP(otp:number,email:string,sub:string) {
+export default async function sendMailForAssetAssignment(email:string,sub:string,asset:IAsset) {
     const transporter = nodemailer.createTransport({
         host: 'mailhog',
-        // host:'localhost',
         port: 1025
     });
-    const data = {otp:otp}
-    ejs.renderFile(__dirname + "/mailOTP.ejs", {data: data}, function (err, data) {
+    console.log("mailhogg....");
+    ejs.renderFile(__dirname + "/assetAssign.ejs", {data: asset.rows[0]}, function (err, data) {
         if (err) {
             console.log(err);
         } else {

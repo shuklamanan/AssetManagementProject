@@ -63,20 +63,15 @@ export interface IAsset{
 
 export interface IMergeDetailsOfAssetAndUser extends ICreateAssetRequestBody , ICreateUserRequestBody{}
 
-export interface IUserAndAsset{
-    rows : IMergeDetailsOfAssetAndUser[];
+interface IAssetAndUser{
+    username:string,
+    assetName : string,
+    email:string,
+    assetType:string
 }
 
-export interface IDecideHolderOfAsset{
-    rows: {asset_holder_or_not : number}[]
-}
-
-export interface IUserDeleteOrNot{
-    rows: { user_deleted_or_not: number}[]
-}
-
-export interface IAssetDeleteOrNot{
-    rows: {asset_deleted_or_not : number}[]
+export interface IAssetAndUserDetails{
+   rows:IAssetAndUser[]
 }
 
 export interface IMergeDetailsOfAssetAndUserAndAssetHistory{

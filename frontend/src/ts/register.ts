@@ -1,4 +1,5 @@
 import {IBodyStructureForUserAPI} from "../functions/interface.ts";
+import {signupApi} from "../functions/api.ts";
 const commonHeaders  : HeadersInit =  {
     "Content-Type": "application/json",
     "Access-Control-Origin": "*"
@@ -40,6 +41,6 @@ registrationForm.addEventListener("submit", async(e : Event) :Promise<void> => {
         phoneNumber : parseInt(formValues.phoneNumber),
         dateOfBirth : formValues.dateOfBirth,
     }
-    await postRequest("http://localhost:5001/users/signup",body);
+    await postRequest(signupApi,body);
 })
 

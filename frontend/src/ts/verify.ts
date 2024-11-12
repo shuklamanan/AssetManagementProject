@@ -1,3 +1,4 @@
+import {verifyUserViaOtpApi} from "../functions/api.ts";
 
 if(!localStorage.getItem("OTPtoken")){
     location.href='../html/register.html'
@@ -18,13 +19,13 @@ async function postRequest(api:string,body: { otp:number }):Promise<void>{
     }
     else{
         alert((await response.json()).message);
-        location.reload()
+        window.location.reload()
     }
 }
 const registrationForm: HTMLFormElement = <HTMLFormElement>document.getElementById("registrationForm");
 registrationForm.addEventListener("submit", async(e : Event) :Promise<void> => {
     e.preventDefault();
-    let otp = Number(document.getElementById("otp").value)
-    await postRequest("http://localhost:5001/users/verify", {otp:otp});
+    let otp = Number(document.getElementById("otp")!.value)
+    await postRequest(verifyUserViaOtpApi, {otp:otp});
 })
 

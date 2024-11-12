@@ -1,6 +1,7 @@
 import client from "../../postgresConfig.ts"
 import {Request, Response} from "express";
 import {IPendingAssetRequest} from "../interfaces.ts";
+import {updateAsset} from "./asset.ts";
 
 export const createAssetRequest = async (req: Request, res: Response):Promise<void> => {
     const { assetId }:{assetId:number} = req.body;
@@ -73,11 +74,13 @@ export const updateRequestStatus = async (req: Request, res: Response): Promise<
             return;
         }
         if (status === 'Disapproved') {
-            const updateStatus = (await client.query(`UPDATE asset_requests SET status = $1 WHERE id = $2 AND status = 'Pending'`, [status, id])).rows[0];
+            const updateStatus = (await client.query(`UPDATE asset_requests SET status = $1 WHERE id = $2 AND status = 'Pending' RETURNING *`, [status, id])).rows[0];
             if(updateStatus.status == 'Disapproved') {
                 res.status(400).json({message: "You can not change status of approved to disapproved."});
                 return;
             }
+            const userEmail = await client.query("SELECT email FROM users WHERE id=$1",[updateStatus.user_id]);
+            const assetName = await client.query("SELECT name FROM assets WHERE id=$1",[updateStatus.asset_id]);
             res.status(200).json({ message: "Asset request disapproved successfully" });
             return;
         }

@@ -7,7 +7,6 @@ import {generateOTP} from "../functions/generateOTP.ts";
 import jwt, {JwtPayload} from "jsonwebtoken";
 import {isValidPassword} from "../functions/validPassword";
 import {isValidEmail} from "../functions/isValidEmail.ts";
-import {User} from "../viewModels/users.ts";
 import mailOTP from "../functions/mailOTP.ts";
 import {hashPassword} from "../functions/hashPassword.ts";
 dotenv.config()
@@ -71,8 +70,8 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
             department: department??null,
             date_of_birth: dateOfBirth,
         }
-        let token = generateToken({username:username})
-        mailOTP(otp,email,"OTP verification")
+        let token:string = generateToken({username:username})
+        await mailOTP(otp,email,"OTP verification")
         console.log(tempUsernameOTPObj,tempSignupUserObj)
         res.status(200).json({OTPtoken:token});
         return;
@@ -113,12 +112,12 @@ export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
         let otp:number = Number(req.body.otp)
         console.log(otp,tempUsernameOTPObj[`${username}`])
         if(tempUsernameOTPObj[`${username}`]===otp){
-            let user = tempSignupUserObj[`${username}`]
+            let user :ICreateUserRequestBody = tempSignupUserObj[`${username}`]
             await client.query("insert into users(username, first_name, last_name, role, email, password, phone_number, department, date_of_birth) values ($1,$2,$3,Array ['Employee']::role[],$4,$5,$6,$7,$8)", [username, user.first_name, user.last_name, user.email, await hashPassword(user.password), user.phone_number, user.department ?? null, user.date_of_birth ?? null])
-            res.json({message:"signup successful"})
+            res.status(200).json({message:"signup successful"})
             return
         }
-        res.json({message:"signup failed"})
+        res.status(400).json({message:"signup failed"})
     } catch (error: any) {
         res.status(500).json({message: error?.message});
         return

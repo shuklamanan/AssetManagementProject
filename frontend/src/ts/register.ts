@@ -1,5 +1,4 @@
 import {IBodyStructureForUserAPI} from "../functions/interface.ts";
-import {signupApi} from "../functions/api.ts";
 const commonHeaders  : HeadersInit =  {
     "Content-Type": "application/json",
     "Access-Control-Origin": "*"
@@ -15,13 +14,15 @@ async function postRequest(api:string,body:IBodyStructureForUserAPI):Promise<voi
         body:JSON.stringify(body)
     });
     const data : Response = await res.json();
+    localStorage.setItem("OTPtoken",data.OTPtoken)
     if(!(res.status >= 200 && res.status < 300)){
         alert(data.message);
         return;
     }
-    window.location.href = "./login.html";
+    window.location.href = "../html/verify.html";
 }
 const registrationForm: HTMLFormElement = <HTMLFormElement>document.getElementById("registrationForm");
+console.log(registrationForm)
 registrationForm.addEventListener("submit", async(e : Event) :Promise<void> => {
     e.preventDefault();
     const formData:FormData = new FormData(registrationForm);
@@ -39,6 +40,6 @@ registrationForm.addEventListener("submit", async(e : Event) :Promise<void> => {
         phoneNumber : parseInt(formValues.phoneNumber),
         dateOfBirth : formValues.dateOfBirth,
     }
-    await postRequest(signupApi,body);
+    await postRequest("http://localhost:5001/users/signup",body);
 })
 

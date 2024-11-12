@@ -1,6 +1,5 @@
 import {assetRequestApi, assetUpdateStatusApi, headers} from "../functions/api.ts";
 import {IAssetRequest, IAssetRequestStatusUpdate} from "../functions/interface.ts";
-// import {appendChildToParent} from "./main.ts";
 
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";
@@ -15,7 +14,7 @@ function createButtons(htmlNode: HTMLElement, idName: string, className: string)
 function createAcceptAndRejectButtons(className: string, idName: string, buttonContent: string): HTMLElement {
     let buttonCell: HTMLElement = document.createElement('td');
     const button: HTMLElement = createButtons(document.createElement('button'), idName, className);
-    button.type = 'button';
+    (<HTMLButtonElement>button).type = 'button';
     button.textContent = buttonContent;
     buttonCell = appendChildToParent(buttonCell, button);
     return buttonCell;
@@ -38,11 +37,12 @@ async function requestAcceptOrReject(asset:IAssetRequest,status:string):Promise<
         body:JSON.stringify(apiBody),
         method:"POST"
     })
+    const res = await response.json();
     if(response.status>=200 && response.status < 300){
         window.location.reload()
     }
     else{
-        alert(response.message);
+        alert(res.message);
     }
 }
 

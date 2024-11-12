@@ -1,15 +1,20 @@
 import client from "../../postgresConfig.ts"
 import {Request, Response} from "express";
 import {
-    IAsset,
+    IAsset, IAssetAndUserDetails,
     ICreateAssetQueryBody,
-    ICreateAssetRequestBody,
-    IDecideHolderOfAsset,
     IMergeDetailsOfAssetAndUser,
     IMergeDetailsOfAssetAndUserAndAssetHistory,
 } from "../interfaces.ts";
 import {Asset} from "../viewModels/assets.ts";
 import {AssetHistory} from "../viewModels/assetHistory.ts";
+import sendMailForAssetAssignment from "../functions/assetAssign.ts";
+import sendMailForAssetUnassignment from "../functions/assetUnassign.ts";
+import sendMailForAssetUpdate from "../functions/assetUpdate.ts";
+
+const assetAssignSubject:string = "Assignment Of Assets";
+const assetUnassignSubject:string = "Unassignment Of Assets";
+const assetUpdationSubject:string = "Update Assets";
 
 export const createAssets = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -23,8 +28,10 @@ export const createAssets = async (req: Request, res: Response): Promise<void> =
             res.status(400).json({message: "some required fields are missing in req"})
             return;
         }
-        const response: IAsset = await client.query("insert into assets(name, asset_type, config,user_id) values ($1,$2,$3,$4)", [name, assetType, JSON.stringify(config), userId ?? null])
+        const response: IAsset = await client.query("insert into assets(name, asset_type, config,user_id) values ($1,$2,$3,$4) RETURNING *", [name, assetType, JSON.stringify(config), userId ?? null])
         if (userId) {
+            const userEmail:string = (await client.query('SELECT email FROM users WHERE id=$1',[userId])).rows[0].email;
+            await sendMailForAssetAssignment(userEmail,assetAssignSubject,response);
             await client.query("INSERT INTO asset_history (asset_id,user_id,assigned_by,assigned_at) VALUES ($1,$2,$3,now())", [response?.rows[0].id, userId, req.body.user.id]);
         }
         res.status(201).json({message: "asset created successfully"});
@@ -73,6 +80,12 @@ export const updateAsset = async (req: Request, res: Response): Promise<void> =>
             userId,
         } = req.body as ICreateAssetQueryBody;
         await client.query("UPDATE assets SET name = $1 , asset_type = $2, config = $3, user_id=$4 WHERE id=$5 AND archived_at IS NULL", [name, assetType, JSON.stringify(config), userId ?? null, id])
+        if(userId){
+            const userEmail:string = (await client.query('SELECT email FROM users WHERE id=$1',[userId])).rows[0].email;
+            const assetName:IAsset = await client.query('SELECT * FROM assets WHERE id=$1',[id]);
+            console.log(assetName,userEmail);
+            await sendMailForAssetUpdate(userEmail,assetUpdationSubject,assetName);
+        }
         res.status(200).json({message: "asset updated successfully"});
         return;
     } catch (error: any) {
@@ -101,6 +114,10 @@ export const assetAssign = async (req: Request, res: Response): Promise<void> =>
         if (!response) {
             await client.query("UPDATE assets SET user_id = $1 WHERE id = $2", [req.body.userId, req.body.assetId]);
             await client.query("INSERT INTO asset_history (asset_id,user_id,assigned_by,assigned_at) VALUES ($1,$2,$3,now())", [req.body.assetId, req.body.userId, req.body.user.id]);
+            const userEmail:string = (await client.query('SELECT email FROM users WHERE id=$1',[req.body.userId])).rows[0].email;
+            const assetName:IAsset = await client.query('SELECT * FROM assets WHERE id=$1',[req.body.assetId]);
+            console.log(assetName,userEmail);
+            await sendMailForAssetAssignment(userEmail,assetAssignSubject,assetName);
             res.status(201).json({"message": "successfully assigning user"});
             return;
         }
@@ -118,12 +135,14 @@ export const assetUnassign = async (req: Request, res: Response): Promise<void> 
             res.status(400).send({error: "Please enter all required fields"});
             return;
         }
-        const response: ICreateAssetRequestBody[] = (await client.query("SELECT * FROM assets WHERE user_id IS NOT NULL AND id=$1", [req.params.id])).rows
-        if (response.length == 0) {
+        const response: IAsset = (await client.query("SELECT * FROM assets WHERE user_id IS NOT NULL AND id=$1", [req.params.id]))
+        if (response.rows.length == 0) {
             res.status(400).json({message: "Asset is already unassigned"});
             return;
         }
-        await client.query("UPDATE asset_history SET unassigned_at = now(),assigned_by = $3 WHERE asset_id=$1 AND user_id=$2 AND unassigned_at IS NULL", [req.params.id, response[0].user_id, req.body.user.id]);
+        const userEmail:string = (await client.query('SELECT email FROM users WHERE id=$1',[response.rows[0].user_id])).rows[0].email;
+        await sendMailForAssetUnassignment(userEmail,assetUnassignSubject,response.rows[0].name,response.rows[0].asset_type);
+        await client.query("UPDATE asset_history SET unassigned_at = now(),assigned_by = $3 WHERE asset_id=$1 AND user_id=$2 AND unassigned_at IS NULL", [req.params.id, response.rows[0].user_id, req.body.user.id]);
         await client.query("UPDATE assets SET user_id = null WHERE id=$1", [req.params.id]);
         res.status(201).json({"message": "successfully unassigning asset"});
         return;
@@ -147,6 +166,10 @@ export const getAssetHistory = async (req: Request, res: Response): Promise<void
 export const deleteAsset = async (req: Request, res: Response): Promise<void> => {
     try {
         let assetId: string = req.params.id
+        const response:IAssetAndUserDetails = await client.query("SELECT a.name AS assetName,a.asset_type AS assetType, u.username AS username, u.email AS email FROM assets a LEFT JOIN users u ON a.user_id = u.id WHERE a.id=$1 AND a.user_id IS NOT NULL",[assetId])
+        if(response.rows.length >0){
+            await sendMailForAssetUnassignment(response.rows[0].email,assetUnassignSubject,response.rows[0].assetName,response.rows[0].assetType);
+        }
         await client.query("update asset_history set unassigned_at = $1 where asset_id = $2 and unassigned_at is null", [new Date(), assetId])
         await client.query("update assets set user_id=null , archived_at = $1 where id = $2", [new Date(), assetId])
         res.status(200).json({message: "asset deleted successfully"})

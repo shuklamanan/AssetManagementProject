@@ -1,6 +1,6 @@
 import client from "../../postgresConfig.ts"
 import {Request, Response} from "express";
-import {ICreateAssetQueryBody,IPendingAssetRequest} from "../interfaces.ts";
+import {IPendingAssetRequest} from "../interfaces.ts";
 
 export const createAssetRequest = async (req: Request, res: Response):Promise<void> => {
     const { assetId }:{assetId:number} = req.body;
@@ -18,6 +18,7 @@ export const createAssetRequest = async (req: Request, res: Response):Promise<vo
         }
         await client.query(`INSERT INTO asset_requests (asset_id, user_id, status) VALUES ($1, $2, 'Pending')`, [assetId, req.body.user.id]);
         res.status(201).json({message: "Asset request created successfully",});
+        return;
     } catch (error: any) {
         res.status(500).json({message: error?.message});
         return;
@@ -26,16 +27,37 @@ export const createAssetRequest = async (req: Request, res: Response):Promise<vo
 
 export const getAllPendingRequests = async (req: Request, res: Response): Promise<void> => {
     try {
-        const result:IPendingAssetRequest[] = (await client.query(`SELECT ar.id,
-                                                                          ar.asset_id AS "assetId",
-                                                                          ar.user_id  AS "userId",
-                                                                          a.name      AS "assetName",
-                                                                          u.username  as "username"
-                                                                   FROM asset_requests ar
-                                                                            INNER JOIN assets a ON ar.asset_id = a.id
-                                                                            INNER JOIN users u ON ar.user_id = u.id
-                                                                   WHERE ar.status = 'Pending'`)).rows
+        const result:IPendingAssetRequest[]= (await client.query(`SELECT ar.id,
+                                                                 ar.asset_id AS "assetId",
+                                                                 ar.user_id  AS "userId",
+                                                                 a.name      AS "assetName",
+                                                                 u.username  as "username"
+                                                                 FROM asset_requests ar
+                                                                 INNER JOIN assets a ON ar.asset_id = a.id
+                                                                 INNER JOIN users u ON ar.user_id = u.id
+                                                                 WHERE ar.status = 'Pending'`)).rows
         res.status(200).json(result);
+        return;
+    } catch (error: any) {
+        res.status(500).json({message: error?.message});
+        return;
+    }
+}
+
+export const checkRequestIsPendingOrNot= async(req:Request,res:Response):Promise<void> => {
+    try {
+        const assetId : string = req.params.id;
+        if(!assetId){
+            res.status(400).json({message:"we can't find Asset Id"});
+            return;
+        }
+        const pendingRequestForSameUserAndAsset:number = (await client.query(`SELECT 1 AS pending_request FROM asset_requests WHERE asset_id = $1 AND user_id = $2 AND status = 'Pending'`,[assetId,req.body.user.id])).rows.length;
+        console.log(pendingRequestForSameUserAndAsset);
+        if(pendingRequestForSameUserAndAsset){
+            res.status(200).json({"message": "Your request is still pending"});
+            return;
+        }
+        res.status(200).json({"message": "You can request this asset"});
         return;
     } catch (error: any) {
         res.status(500).json({message: error?.message});
@@ -51,7 +73,11 @@ export const updateRequestStatus = async (req: Request, res: Response): Promise<
             return;
         }
         if (status === 'Disapproved') {
-            await client.query(`UPDATE asset_requests SET status = $1 WHERE id = $2`, [status, id]);
+            const updateStatus = (await client.query(`UPDATE asset_requests SET status = $1 WHERE id = $2 AND status = 'Pending'`, [status, id])).rows[0];
+            if(updateStatus.status == 'Disapproved') {
+                res.status(400).json({message: "You can not change status of approved to disapproved."});
+                return;
+            }
             res.status(200).json({ message: "Asset request disapproved successfully" });
             return;
         }
@@ -105,8 +131,9 @@ export const updateRequestStatus = async (req: Request, res: Response): Promise<
             `UPDATE asset_requests SET status = $1 WHERE id = $2`,
             [status, id]
         );
-
+        await client.query(`UPDATE asset_requests SET status = $1 WHERE status = 'Pending' AND asset_id = $2`, ["Disapproved", assetId]);
         res.status(200).json({ message: "Asset request approved and asset assigned successfully" });
+        return;
     } catch (error: any) {
         res.status(500).json({message: error?.message});
         return;

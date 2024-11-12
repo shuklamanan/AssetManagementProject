@@ -97,8 +97,8 @@ export const assetAssign = async (req: Request, res: Response): Promise<void> =>
             res.status(400).json({"message": "You can not assign asset to this user because This user is deleted"});
             return;
         }
-        const response: number = (await client.query("SELECT 1 AS asset_holder_or_not FROM assets WHERE id=$1 AND user_id IS NOT NULL", [req.body.assetId])).rows.length
-        if (response) {
+        const response: number = (await client.query("SELECT 1 AS asset_holder_or_not FROM assets WHERE id=$1 AND user_id IS NOT NULL", [req.body.assetId])).rows.length;
+        if (!response) {
             await client.query("UPDATE assets SET user_id = $1 WHERE id = $2", [req.body.userId, req.body.assetId]);
             await client.query("INSERT INTO asset_history (asset_id,user_id,assigned_by,assigned_at) VALUES ($1,$2,$3,now())", [req.body.assetId, req.body.userId, req.body.user.id]);
             res.status(201).json({"message": "successfully assigning user"});

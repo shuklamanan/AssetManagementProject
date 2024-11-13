@@ -1,6 +1,7 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts'
 import {IAssetHistory} from "../functions/interface.ts";
-import {assetHistoryApi, headers} from "../functions/api.ts";
+import {assetHistoryApi} from "../functions/api.ts";
+import {executeGetApi} from "./apiExecution.ts";
 
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";
@@ -24,10 +25,8 @@ function appendChildToParent(parentNode: HTMLElement, ...childNodes: HTMLElement
 
 
 async function fetchAssetHistory(): Promise<void> {
-    const response: Response = await fetch(assetHistoryApi, {
-        headers: headers,
-    });
-    let assets:IAssetHistory[] = await response.json()
+    const responseAnswerArray  = await executeGetApi(assetHistoryApi);
+    let assets:IAssetHistory[] = responseAnswerArray[1];
     console.log(assets)
     displayAssetHistory(assets);
 }

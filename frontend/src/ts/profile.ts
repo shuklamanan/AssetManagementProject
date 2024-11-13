@@ -1,5 +1,6 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts';
-import {getProfileApi, headers} from "../functions/api.ts";
+import {getProfileApi} from "../functions/api.ts";
+import {executeGetApi} from "./apiExecution.ts";
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";
 }
@@ -16,10 +17,8 @@ const roles: string[] = await fetchUserRoles();
 await displayContentBasedOnRoles(roles);
 
 async function fetchUserProfile() : Promise<void> {
-    const response : Response = await fetch(getProfileApi, {
-        headers: headers,
-    });
-    const userData = await response.json();
+    const responseAnswerArray  = await executeGetApi(getProfileApi);
+    const userData = responseAnswerArray[1];
     console.log(userData);
     (<HTMLElement>document.getElementById('username')).textContent = userData.username || "N/A";
     (<HTMLElement>document.getElementById('fullName')).textContent = userData.firstName + " " + userData.lastName || "N/A";

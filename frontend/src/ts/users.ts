@@ -1,6 +1,7 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts'
 import {IBodyStructureForUserAPI} from "../functions/interface.ts";
-import {createUserViaAdminApi, deleteUserApi, getAllUsersApi, headers} from "../functions/api.ts";
+import {createUserViaAdminApi, deleteUserApi, getAllUsersApi} from "../functions/api.ts";
+import {executeGetApi, executePostPutDeleteApi} from "./apiExecution.ts";
 
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";
@@ -23,11 +24,10 @@ interface IUser {
 }
 
 async function fetchUsers(): Promise<IUser[]> {
-    const response: Response = await fetch(getAllUsersApi, {
-        headers:headers
-    });
-    return await response.json();
+    const responseAnswerArray  = await executeGetApi(getAllUsersApi);
+    return responseAnswerArray[1];
 }
+
 let users:IUser[] = await fetchUsers()
 displayUsers(users)
 console.log(users)
@@ -38,14 +38,12 @@ document.getElementById("logout")!.addEventListener('click',() : void=>{
 
 async function deleteUser(userId: number): Promise<void> {
     const deleteUser: string = deleteUserApi + `${userId}`;
-    const response: Response = await fetch(deleteUser, {
-        headers: headers,
-        method: "DELETE"
-    });
-    if (response.ok) {
+
+    const responseAnswerArray = await executePostPutDeleteApi(deleteUser, "DELETE",{});
+    if (responseAnswerArray[0].ok) {
         console.log(`User ${userId} deleted successfully`);
-       users = await fetchUsers();
-       displayUsers(users)
+        users = await fetchUsers();
+        displayUsers(users)
     } else {
         console.log('Failed to delete user');
     }
@@ -93,13 +91,9 @@ function displayUsers(users: IUser[]): void {
 
 
 async function postRequest(api:string,body:IBodyStructureForUserAPI):Promise<void>{
-    const res : Response  = await fetch(api, {
-        method:"POST",
-        headers:headers,
-        body:JSON.stringify(body)
-    });
-    const data = await res.json();
-    if(!(res.status >= 200 && res.status < 300)){
+    const responseAnswerArray  = await executePostPutDeleteApi(api,"POST",body);
+    const data = responseAnswerArray[1];
+    if(!(responseAnswerArray[0].status >= 200 && responseAnswerArray[0].status < 300)){
         alert(data.message);
         return;
     }

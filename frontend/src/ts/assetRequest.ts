@@ -1,5 +1,6 @@
-import {assetRequestApi, assetUpdateStatusApi, headers} from "../functions/api.ts";
+import {assetRequestApi, assetUpdateStatusApi} from "../functions/api.ts";
 import {IAssetRequest, IAssetRequestStatusUpdate} from "../functions/interface.ts";
+import {executeGetApi, executePostPutDeleteApi} from "./apiExecution.ts";
 
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";
@@ -32,13 +33,9 @@ async function requestAcceptOrReject(asset:IAssetRequest,status:string):Promise<
         "id":asset.id,
         "status":status
     }
-    const response : Response = await fetch(assetUpdateStatusApi,{
-        headers:headers,
-        body:JSON.stringify(apiBody),
-        method:"POST"
-    })
-    const res = await response.json();
-    if(response.status>=200 && response.status < 300){
+    const responseAnswerArray  = await executePostPutDeleteApi(assetUpdateStatusApi,"POST",apiBody);
+    const res = responseAnswerArray[1];
+    if(responseAnswerArray[0].status>=200 && responseAnswerArray[0].status < 300){
         window.location.reload()
     }
     else{
@@ -47,10 +44,8 @@ async function requestAcceptOrReject(asset:IAssetRequest,status:string):Promise<
 }
 
 async function fetchAssetsRequests(): Promise<void> {
-    const response: Response = await fetch(assetRequestApi, {
-        headers: headers,
-    });
-    pendingRequests = await response.json();
+    const responseAnswerArray  = await executeGetApi(assetRequestApi);
+    pendingRequests = responseAnswerArray[1];
     console.log(pendingRequests);
     await displayAssetsRequests(pendingRequests);
 }

@@ -11,7 +11,7 @@ export const verifyJwt = async (req :Request,res:Response,next:NextFunction):Pro
             return
         }
         const payload : JwtPayload = jwt.verify(authToken,process.env.ACCESS_TOKEN_SECRET??"") as JwtPayload
-        const user :ICreateUserRequestBody[] =  (await client.query('select * from users where id = $1',[payload?.id])).rows
+        const user :ICreateUserRequestBody[] =  (await client.query('select * from users where id = $1 and archived_at is null',[payload?.id])).rows
         if(user.length===0){
             res.status(404).json({message:"user not found"})
             return
@@ -19,7 +19,7 @@ export const verifyJwt = async (req :Request,res:Response,next:NextFunction):Pro
         req.body.user = user[0]
         next()
     } catch (e:any) {
-        res.sendStatus(401)
+        res.send(401).json({message:"Internal Server Error"})
         return
     }
 }

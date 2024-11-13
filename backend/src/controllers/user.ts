@@ -46,6 +46,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
         let userId: string = req.params.id
         await client.query("update assets set user_id=null where user_id=$1", [userId])
         await client.query("update asset_history set unassigned_at = $1 where unassigned_at is null and user_id=$2 ",[new Date(),userId])
+        await client.query("update asset_requests set status='Disapproved' where status='Pending' and user_id=$1",[userId])
         await client.query("update users set archived_at = $1 where id = $2", [new Date(), userId])
         res.status(200).json({message: "user deleted successfully"})
         return

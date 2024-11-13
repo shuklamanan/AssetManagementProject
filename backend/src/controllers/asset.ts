@@ -45,7 +45,26 @@ export const createAssets = async (req: Request, res: Response): Promise<void> =
 export const getAllAssets = async (req: Request, res: Response): Promise<void> => {
     try {
         let response: IMergeDetailsOfAssetAndUser[];
-        response = (await client.query(`SELECT a.id,
+        if(req.body.user.role.includes('Admin')) {
+            response = (await client.query(`SELECT a.id,
+                                                   a.name,
+                                                   a.asset_type,
+                                                   a.user_id,
+                                                   a.config,
+                                                   u.username,
+                                                   u.first_name,
+                                                   u.last_name,
+                                                   u.email,
+                                                   u.phone_number
+                                            FROM assets a
+                                                     LEFT JOIN users u ON u.id = a.user_id
+                                            WHERE a.archived_at IS NULL
+                                              AND u.archived_at IS NULL
+                                            ORDER BY a.id
+            `)).rows;
+        }
+        else{
+            response = (await client.query(`SELECT a.id,
                                                a.name,
                                                a.asset_type,
                                                a.user_id,
@@ -59,8 +78,10 @@ export const getAllAssets = async (req: Request, res: Response): Promise<void> =
                                                  LEFT JOIN users u ON u.id = a.user_id
                                         WHERE a.archived_at IS NULL
                                           AND u.archived_at IS NULL
+                                          AND (u.id = $1 OR a.user_id IS NULL)
                                         ORDER BY a.id
-        `)).rows;
+            `,[req.body.user.id])).rows;
+        }
         const allAssets = response.map(asset => new Asset(asset));
         res.status(200).json(allAssets ?? []);
         return;
@@ -170,6 +191,7 @@ export const deleteAsset = async (req: Request, res: Response): Promise<void> =>
         if(response.rows.length >0){
             await sendMailForAssetUnassignment(response.rows[0].email,assetUnassignSubject,response.rows[0].assetName,response.rows[0].assetType);
         }
+        await client.query("update asset_requests set status='Disapproved' where status='Pending' and asset_id=$1",[assetId])
         await client.query("update asset_history set unassigned_at = $1 where asset_id = $2 and unassigned_at is null", [new Date(), assetId])
         await client.query("update assets set user_id=null , archived_at = $1 where id = $2", [new Date(), assetId])
         res.status(200).json({message: "asset deleted successfully"})

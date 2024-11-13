@@ -1,16 +1,16 @@
 import nodemailer from "nodemailer";
 import ejs from 'ejs'
 import dotenv from 'dotenv'
-import {IAsset} from "../interfaces";
 
 dotenv.config()
-export default async function sendMailForAssetRequests(status:string,email:string,sub:string,asset:IAsset) {
+export default async function mailAsset(email:string, sub:string, config:object|string|undefined, name:string, asset_type:string, title:string) {
     const transporter = nodemailer.createTransport({
-        host: 'mailhog',
+        // host: 'mailhog',
+        host: 'localhost',
         port: 1025
     });
-    console.log("mailhogg....");
-    ejs.renderFile(__dirname + "/requestOfAsset.ejs", {data: asset.rows[0],status:status}, function (err, data) {
+
+    ejs.renderFile(__dirname + "/mailAsset.ejs", {data: {config, name, asset_type, title}}, function (err, data) {
         if (err) {
             console.log(err);
         } else {

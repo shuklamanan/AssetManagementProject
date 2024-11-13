@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assets Update</title>
+    <title>Asset Details</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -27,6 +27,21 @@
             padding: 10px;
             border-radius: 5px;
             display: inline-block;
+            margin-bottom: 10px;
+        }
+        .config-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .config-table th, .config-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .config-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -34,15 +49,24 @@
 <div class="email-container">
     <h2 class="text-center text-primary mb-4">Asset Management System</h2>
     <p>Hi,</p>
-    <p>Following Assets details are update Please Check it out</p>
+    <p><%= data.title %>. If this is incorrect, please contact your admin:</p>
 
-    <div id="text-center">
-        <p class="asset-data">
-            <%= data.name %>
-        </p>
-        <br>
+    <div class="text-center">
+        <p class="asset-data"><%= data.name %></p>
+        <p class="asset-data"><%= data.asset_type %></p>
     </div>
 
+    <h4>Configuration Details:</h4>
+    <table class="config-table">
+        <tbody>
+        <% Object.entries(data.config).forEach(([key, value]) => { %>
+            <tr>
+                <th><%= key %></th>
+                <td><%= value %></td>
+            </tr>
+        <% }); %>
+        </tbody>
+    </table>
     <hr>
     <p class="text-center text-muted">Thank you,<br>Asset Management Team</p>
 </div>

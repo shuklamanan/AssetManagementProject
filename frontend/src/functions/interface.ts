@@ -22,10 +22,12 @@ export interface IAssetRequestStatusUpdate{
 export interface IUser {
     id?:number,
     username: string,
-    firstname: string,
+    firstName: string,
     lastName: string,
+    role?:string[],
     email: string,
     phoneNumber: number,
+    department?:string,
     dateOfBirth: Date | string,
     createdAt ?: Date | string,
 }

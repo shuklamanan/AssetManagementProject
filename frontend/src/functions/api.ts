@@ -28,3 +28,5 @@ export const headers :Record<string,string> = {
     'Authorization': `${localStorage.getItem('token')}`,
     'Content-Type': 'application/json'
 }
+
+export function emptyFunction():void{}

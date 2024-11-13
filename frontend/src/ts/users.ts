@@ -1,7 +1,8 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts'
-import {IBodyStructureForUserAPI} from "../functions/interface.ts";
+import {IBodyStructureForUserAPI, IUser} from "../functions/interface.ts";
 import {createUserViaAdminApi, deleteUserApi, getAllUsersApi} from "../functions/api.ts";
 import {executeGetApi, executePostPutDeleteApi} from "./apiExecution.ts";
+import {createTable} from "./tables.ts";
 
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";
@@ -9,18 +10,6 @@ if (localStorage.getItem("token") === null || localStorage.getItem("token") === 
 const roles:string[] = await fetchUserRoles();
 if(!roles.includes("Admin")){
     location.href = '/src/html/index.html'
-}
-
-interface IUser {
-    id: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    role: string[];
-    email: string;
-    phoneNumber: number;
-    department: string | null;
-    dateOfBirth: string;
 }
 
 async function fetchUsers(): Promise<IUser[]> {
@@ -54,39 +43,7 @@ function displayUsers(users: IUser[]): void {
     const addUserBtn : HTMLElement = <HTMLElement>document.getElementById('createUser');
     addUserBtn!.setAttribute('data-toggle', 'modal');
     addUserBtn!.setAttribute('data-target', '#addUserModal');
-    tbody.innerHTML = '';
-    console.log(users);
-    users.forEach(user => {
-        const row: HTMLTableRowElement = document.createElement('tr');
-
-        const cells = [
-            user.username,
-            user.firstName,
-            user.lastName,
-            user.role,
-            user.email,
-            user.phoneNumber,
-            user.department || 'N/A',
-            new Date(user.dateOfBirth).toLocaleDateString()
-        ];
-
-        cells.forEach(cellText => {
-            const cell: HTMLTableCellElement = document.createElement('td');
-            cell.textContent = String(cellText);
-            row.appendChild(cell);
-        });
-
-        const deleteButtonCell: HTMLTableCellElement = document.createElement('td');
-        const deleteButton: HTMLButtonElement = document.createElement('button');
-        deleteButton.className = 'btn btn-danger';
-        deleteButton.type = 'button';
-        deleteButton.textContent = 'Delete';
-        deleteButton.onclick = () => deleteUser(user.id);
-
-        deleteButtonCell.appendChild(deleteButton);
-        row.appendChild(deleteButtonCell);
-        tbody.appendChild(row);
-    });
+    createTable(tbody,users,[deleteUser],true,["Delete"],["btn btn-danger"]);
 }
 
 

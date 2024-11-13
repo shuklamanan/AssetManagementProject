@@ -5,8 +5,8 @@ import dotenv from 'dotenv'
 dotenv.config()
 export default async function mailAsset(email:string, sub:string, config:object|string|undefined, name:string, asset_type:string, title:string) {
     const transporter = nodemailer.createTransport({
-        // host: 'mailhog',
-        host: 'localhost',
+        host: 'mailhog',
+        // host: 'localhost',
         port: 1025
     });
 

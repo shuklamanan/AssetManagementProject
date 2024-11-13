@@ -8,6 +8,7 @@ import {
 } from "../interfaces.ts";
 import {User} from "../viewModels/users.ts";
 import {hashPassword} from "../functions/hashPassword.ts";
+import mailUser from "../functions/mailUser.ts";
 
 export const getRoles = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -47,7 +48,9 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
         await client.query("update assets set user_id=null where user_id=$1", [userId])
         await client.query("update asset_history set unassigned_at = $1 where unassigned_at is null and user_id=$2 ",[new Date(),userId])
         await client.query("update asset_requests set status='Disapproved' where status='Pending' and user_id=$1",[userId])
-        await client.query("update users set archived_at = $1 where id = $2", [new Date(), userId])
+        const users:ICreateUserRequestBody[] = (await client.query("update users set archived_at = $1 where id = $2 returning *", [new Date(), userId])).rows
+        const user = users[0]
+        await mailUser(user.email,"Account deleted",user.username,user.first_name,user.last_name,user.email,user.phone_number,user.date_of_birth,"Your account in asset management is being suspended by admin")
         res.status(200).json({message: "user deleted successfully"})
         return
     } catch (error: any) {
@@ -85,6 +88,7 @@ export const createUserViaAdmin = async (req: Request, res: Response): Promise<v
             return;
         }
         await client.query("insert into users(username, first_name, last_name, role, email, password, phone_number, department, date_of_birth) values ($1,$2,$3,$9,$4,$5,$6,$7,$8)", [username, firstName, lastName, email, await hashPassword(password), phoneNumber, department ?? null, dateOfBirth ?? null,role])
+        await mailUser(email,"Creation of account by admin",username,firstName,lastName,email,phoneNumber,new Date(dateOfBirth),"your account has been created by admin the username and password for your account are: username:"+username +" password:"+password)
         res.status(201).json({message: "user created successfully"});
         return;
     } catch (error: any) {

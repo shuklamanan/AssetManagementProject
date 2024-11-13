@@ -1,7 +1,8 @@
 import client from "../../postgresConfig.ts"
 import {Request, Response} from "express";
-import {IPendingAssetRequest} from "../interfaces.ts";
+import {ICreateAssetRequestBody, IPendingAssetRequest} from "../interfaces.ts";
 import {updateAsset} from "./asset.ts";
+import mailAsset from "../functions/mailAsset.ts";
 
 export const createAssetRequest = async (req: Request, res: Response):Promise<void> => {
     const { assetId }:{assetId:number} = req.body;
@@ -75,12 +76,12 @@ export const updateRequestStatus = async (req: Request, res: Response): Promise<
         }
         if (status === 'Disapproved') {
             const updateStatus = (await client.query(`UPDATE asset_requests SET status = $1 WHERE id = $2 AND status = 'Pending' RETURNING *`, [status, id])).rows[0];
-            if(updateStatus.status == 'Disapproved') {
-                res.status(400).json({message: "You can not change status of approved to disapproved."});
-                return;
-            }
-            const userEmail = await client.query("SELECT email FROM users WHERE id=$1",[updateStatus.user_id]);
-            const assetName = await client.query("SELECT name FROM assets WHERE id=$1",[updateStatus.asset_id]);
+
+            const userEmail:string = (await client.query("SELECT email FROM users WHERE id=$1",[updateStatus.user_id])).rows[0].email;
+            const assetDetails:ICreateAssetRequestBody = (await client.query("SELECT name, asset_type, config FROM assets WHERE id=$1",[updateStatus.asset_id])).rows[0];
+            console.log(userEmail,assetDetails)
+            await mailAsset(userEmail, "Asset Request Disapproved", assetDetails.config, assetDetails.name, assetDetails.asset_type, "Your asset request has been disapproved");
+
             res.status(200).json({ message: "Asset request disapproved successfully" });
             return;
         }
@@ -135,6 +136,13 @@ export const updateRequestStatus = async (req: Request, res: Response): Promise<
             [status, id]
         );
         await client.query(`UPDATE asset_requests SET status = $1 WHERE status = 'Pending' AND asset_id = $2`, ["Disapproved", assetId]);
+
+        const updateStatus = (await client.query(`select * from asset_requests where id=$1`, [id])).rows[0];
+
+        const userEmail:string = (await client.query("SELECT email FROM users WHERE id=$1",[updateStatus.user_id])).rows[0].email;
+        const assetDetails:ICreateAssetRequestBody = (await client.query("SELECT name, asset_type, config FROM assets WHERE id=$1",[updateStatus.asset_id])).rows[0];
+
+        await mailAsset(userEmail, "Asset Request Approved", assetDetails.config, assetDetails.name, assetDetails.asset_type, "Your asset request has been approved");
         res.status(200).json({ message: "Asset request approved and asset assigned successfully" });
         return;
     } catch (error: any) {

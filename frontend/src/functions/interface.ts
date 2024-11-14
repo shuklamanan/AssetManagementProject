@@ -61,3 +61,24 @@ export interface ILoginToken{
     token?:string,
     message?:string
 }
+
+export interface IForgetPassword{
+    username:string
+}
+
+export interface IForgetPasswordToken{
+    forgetPasswordToken?:string
+    message?:string
+}
+
+export interface IResetPassword{
+    otp:number,
+    password:string,
+    confirmPassword:string,
+}
+
+
+
+
+
+

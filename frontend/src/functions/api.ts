@@ -7,6 +7,9 @@ export const verifyUserViaOtpApi:string = userApi + "verify/";
 export const loginApi:string = userApi + "login/";
 export const signupApi:string = userApi + "signup/";
 
+export const forgetPasswordApi:string = userApi + "password/forget";
+export const resetPasswordApi:string = userApi + "password/reset";
+
 export const getAllUsersApi:string = userApi;
 export const getProfileApi:string = userApi + "profile/";
 export const getRolesApi:string = userApi + "roles/";
@@ -28,5 +31,3 @@ export const headers :Record<string,string> = {
     'Authorization': `${localStorage.getItem('token')}`,
     'Content-Type': 'application/json'
 }
-
-export function emptyFunction():void{}

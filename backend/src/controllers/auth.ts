@@ -10,20 +10,22 @@ import {isValidEmail} from "../functions/isValidEmail.ts";
 import mailOTP from "../functions/mailOTP.ts";
 import {hashPassword} from "../functions/hashPassword.ts";
 dotenv.config()
-const generateToken = (payload: JwtPayload) => {
+const generateToken = (payload: JwtPayload,time:string) => {
     const secretKey: string = process.env.ACCESS_TOKEN_SECRET ?? ""; // Replace with your own secret key
     const options = {
-        expiresIn: '24h',
+        expiresIn: time,
     };
     return jwt.sign(payload, secretKey, options);
 };
 
 let tempSignupUserObj: { [key:string]:ICreateUserRequestBody } = {}
+let tempPasswordResetObj: { [key:string]:number } = {}
 let tempUsernameOTPObj: { [key:string]:number } = {}
 //if we have used redis or something similar this would be much more efficient but this works fine as well
 setInterval(() => {
     tempSignupUserObj = {}
     tempUsernameOTPObj = {}
+    tempPasswordResetObj = {}
 }, 1000000)
 export const createUser = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -70,7 +72,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
             department: department??null,
             date_of_birth: dateOfBirth,
         }
-        let token:string = generateToken({username:username})
+        let token:string = generateToken({username:username},'24h')
         await mailOTP(otp,email,"OTP verification")
         console.log(tempUsernameOTPObj,tempSignupUserObj)
         res.status(200).json({OTPtoken:token});
@@ -98,7 +100,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             return
         }
         let payload: JwtPayload = {id: user.id}
-        let token: string = generateToken(payload)
+        let token: string = generateToken(payload,'24h')
         res.status(200).json({token: token});
         return
     } catch (error: any) {
@@ -123,3 +125,62 @@ export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
         return
     }
 };
+
+export const forgotPassword = async (req:Request, res:Response):Promise<void>=>{
+    try{
+        if(!req.body.username){
+            res.status(404).json({message:"username is not found"})
+            return
+        }
+        const user : {email:string}[] = (await client.query("SELECT email FROM users WHERE archived_at IS NULL AND username = $1",[req.body.username])).rows;
+        if(user.length === 0) {
+            res.status(404).json({message:"user not found"})
+            return;
+        }
+        const otp:number = generateOTP(4)
+        tempPasswordResetObj[`${req.body.username}`] = otp
+        await mailOTP(otp,user[0].email,"Password Reset")
+        const token:string = generateToken({username:req.body.username},'2m');
+        res.status(200).json({secondToken:token});
+        return;
+    }
+    catch(error:any){
+        res.status(500).json({message: error?.message});
+        return
+    }
+}
+
+export const resetPassword = async (req:Request,res:Response):Promise<void>=>{
+    try{
+        const otp:number=parseInt(req.body.otp);
+        const password :string= req.body.password.trim();
+        const confirmPassword:string = req.body.confirmPassword.trim();
+        if(!password || !confirmPassword || password!=confirmPassword){
+            res.status(400).json({message:"Both Passwords do not match"})
+            return;
+        }
+        if (!isValidPassword(password)) {
+            res.status(400).json({
+                message: `Password should contain:-\n' +
+                    '                    It contains at least 8 characters and at most 20 characters.\n' +
+                    '                    It contains at least one digit.\n' +
+                    '                    It contains at least one upper case alphabet.\n' +
+                    '                    It contains at least one lower case alphabet.\n' +
+                    '                    It contains at least one special character which includes !@#$%&*()-+=^.\n' +
+                    '                    It doesn't contain any white space.`
+            });
+            return
+        }
+        if(otp!=tempPasswordResetObj[`${req.body.username}`]){
+            res.status(400).json({message:"Password Reset is failed"})
+            return;
+        }
+        await client.query("UPDATE users SET password = $1 WHERE archived_at IS NOT NULL AND username=$2",[await hashPassword(password),req.body.username]);
+        res.status(200).json({message:"Password Reset Successful"})
+        return
+    }
+    catch(error:any){
+        res.status(500).json({message: error?.message});
+        return
+    }
+}

@@ -141,7 +141,7 @@ export const forgotPassword = async (req:Request, res:Response):Promise<void>=>{
         tempPasswordResetObj[`${req.body.username}`] = otp
         await mailOTP(otp,user[0].email,"Password Reset")
         const token:string = generateToken({username:req.body.username},'2m');
-        res.status(200).json({secondToken:token});
+        res.status(200).json({forgetPasswordToken:token});
         return;
     }
     catch(error:any){
@@ -175,7 +175,7 @@ export const resetPassword = async (req:Request,res:Response):Promise<void>=>{
             res.status(400).json({message:"Password Reset is failed"})
             return;
         }
-        await client.query("UPDATE users SET password = $1 WHERE archived_at IS NOT NULL AND username=$2",[await hashPassword(password),req.body.username]);
+        await client.query("UPDATE users SET password = $1 WHERE archived_at IS NULL AND username=$2",[await hashPassword(password),req.body.username]);
         res.status(200).json({message:"Password Reset Successful"})
         return
     }

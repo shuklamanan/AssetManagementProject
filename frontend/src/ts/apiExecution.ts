@@ -4,21 +4,40 @@ export async function executeGetApi(api:string,apiHeaders?:any) : Promise<any>{
     const response :Response= await fetch(api, {
         headers: apiHeaders??headers,
     });
-    const answer:any = await response.json();
-    console.log(answer);
-    if(answer.message == "user not found"){
+    const data:any = await response.json();
+    console.log(data);
+    if(data.message == "user not found"){
         localStorage.removeItem('token');
         location.href = "/src/html/login.html";
     }
-    return [response,answer];
+    return [response,data];
 }
 
-export async function executePostPutDeleteApi(api:string,method:string,body:any,apiHeaders?:any) : Promise<any>{
+export async function executePostApi(api:string,body:any,apiHeaders?:any) : Promise<any>{
     const response :Response= await fetch(api, {
         headers: apiHeaders??headers,
-        method: method,
+        method: "POST",
         body: JSON.stringify(body),
     });
-    const answer:any = await response.json();
-    return [response,answer];
+    const data:any = await response.json();
+    return [response,data];
+}
+
+export async function executePutApi(api:string,body:any,apiHeaders?:any) : Promise<any>{
+    const response :Response= await fetch(api, {
+        headers: apiHeaders??headers,
+        method: "PUT",
+        body: JSON.stringify(body),
+    });
+    const data:any = await response.json();
+    return [response,data];
+}
+
+export async function executeDeleteApi(api:string,apiHeaders?:any) : Promise<any>{
+    const response :Response= await fetch(api, {
+        headers: apiHeaders??headers,
+        method: "DELETE",
+    });
+    const data:any = await response.json();
+    return [response,data];
 }

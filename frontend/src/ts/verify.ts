@@ -1,5 +1,5 @@
 import {verifyUserViaOtpApi} from "../functions/api.ts";
-import {executePostPutDeleteApi} from "./apiExecution.ts";
+import {executePostApi} from "./apiExecution.ts";
 
 if(!localStorage.getItem("OTPtoken")){
     location.href='../html/register.html'
@@ -9,13 +9,13 @@ async function postRequest(api:string,body: { otp:number }):Promise<void>{
         'Authorization': `${localStorage.getItem('OTPtoken')}`,
         'Content-Type': 'application/json'
     }
-    const responseAnswerArray  = await executePostPutDeleteApi(api,"POST",body,apiHeaders);
-    if(responseAnswerArray[0].status>=200 && responseAnswerArray[0].status < 300){
+    const responseDataArray  = await executePostApi(api,body,apiHeaders);
+    if(responseDataArray[0].status>=200 && responseDataArray[0].status < 300){
         alert("user created successfully")
         window.location.href = "/src/html/login.html";
     }
     else{
-        alert((responseAnswerArray[1]).message);
+        alert((responseDataArray[1]).message);
         window.location.reload()
     }
 }

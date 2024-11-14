@@ -17,8 +17,8 @@ const roles: string[] = await fetchUserRoles();
 await displayContentBasedOnRoles(roles);
 
 async function fetchUserProfile() : Promise<void> {
-    const responseAnswerArray  = await executeGetApi(getProfileApi);
-    const userData = responseAnswerArray[1];
+    const responseDataArray  = await executeGetApi(getProfileApi);
+    const userData = responseDataArray[1];
     console.log(userData);
     (<HTMLElement>document.getElementById('username')).textContent = userData.username || "N/A";
     (<HTMLElement>document.getElementById('fullName')).textContent = userData.firstName + " " + userData.lastName || "N/A";

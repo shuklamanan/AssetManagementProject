@@ -1,6 +1,6 @@
 import {IForgetPasswordToken, IResetPassword} from "../functions/interface.ts";
 import {resetPasswordApi} from "../functions/api.ts";
-import {executePostPutDeleteApi} from "./apiExecution.ts";
+import {executePostApi} from "./apiExecution.ts";
 const commonHeaders  : HeadersInit =  {
     "Content-Type": "application/json",
     "Access-Control-Origin": "*",
@@ -12,7 +12,7 @@ if (localStorage.getItem("token")!=null) {
 
 async function postRequest(api:string,body:IResetPassword): Promise<void>{
     console.log(body);
-    const responseDataArray  = await executePostPutDeleteApi(api,"POST",body,commonHeaders);
+    const responseDataArray  = await executePostApi(api,body,commonHeaders);
 
     const data: IForgetPasswordToken = responseDataArray[1];
     if(!(responseDataArray[0].status >= 200 && responseDataArray[0].status < 500)){
@@ -25,9 +25,9 @@ async function postRequest(api:string,body:IResetPassword): Promise<void>{
 const resetPasswordForm : HTMLFormElement = <HTMLFormElement>document.getElementById('reset-password-form');
 resetPasswordForm.addEventListener("submit", async (e: Event): Promise<void> => {
     e.preventDefault();
-    console.log("hioii");
     const formData: FormData = new FormData(resetPasswordForm);
     const formValues : object = Object.fromEntries(formData);
+
     const body : IResetPassword = {
         otp:formValues.otp,
         password:formValues.newPassword,

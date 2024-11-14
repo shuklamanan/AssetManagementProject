@@ -10,10 +10,9 @@ import {
     getAllAssetsApi,
     getAllUsersApi,
     getRolesApi,
-    headers,
     updateAssetApi
 } from "../functions/api.ts";
-import {executeGetApi, executePostPutDeleteApi} from "./apiExecution.ts";
+import {executeDeleteApi, executeGetApi, executePostApi, executePutApi} from "./apiExecution.ts";
 
 if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
     window.location.href = "/src/html/login.html";
@@ -40,8 +39,8 @@ displayContentBasedOnRoles(roles);
 let assets: IAsset[] = [];
 
 async function checkAdminOrNot(): Promise<boolean> {
-    const responseAnswerArray  = await executeGetApi(getRolesApi);
-    const roleArray = responseAnswerArray[1];
+    const responseDataArray  = await executeGetApi(getRolesApi);
+    const roleArray = responseDataArray[1];
     console.log(roleArray);
     return roleArray.includes("Admin");
 }
@@ -50,8 +49,8 @@ let users: IUser[];
 
 async function getDataOfUser(dropdownForUsers: HTMLElement): Promise<void> {
     let selectTag: HTMLElement = document.createElement('select');
-    const responseAnswerArray  = await executeGetApi(getAllUsersApi);
-    users = responseAnswerArray[1];
+    const responseDataArray  = await executeGetApi(getAllUsersApi);
+    users = responseDataArray[1];
     selectTag.setAttribute('name', 'users');
     selectTag.setAttribute('id', 'users');
     for (let i: number = 0; i < users.length; i++) {
@@ -64,9 +63,9 @@ async function getDataOfUser(dropdownForUsers: HTMLElement): Promise<void> {
 }
 
 async function fetchAssets(): Promise<void> {
-    const responseAnswerArray  = await executeGetApi(getAllAssetsApi);
-    console.log(responseAnswerArray);
-    assets = responseAnswerArray[1];
+    const responseDataArray  = await executeGetApi(getAllAssetsApi);
+    console.log(responseDataArray);
+    assets = responseDataArray[1];
     console.log(assets);
     await displayAssets(assets);
 }
@@ -96,8 +95,8 @@ function createOpenAndCloseButtons(className: string, idName: string, targetModa
 async function pendingRequests(asset : IAsset):Promise<boolean>{
     console.log(asset);
     const pendingAssetsApi:string = assetPendingApi + `${asset.id}`;
-    const responseAnswerArray  = await executeGetApi(pendingAssetsApi);
-    const res = responseAnswerArray[1];
+    const responseDataArray  = await executeGetApi(pendingAssetsApi);
+    const res = responseDataArray[1];
     return res.message == "Your request is still pending";
 }
 
@@ -222,8 +221,8 @@ async function addAsset(dropdown: HTMLElement): Promise<void> {
         const userId: number | undefined = getIdFromUsername(dropdown!.firstChild!.value);
         addAssetApiBody["userId"] = userId!.toString();
     }
-    const responseAnswerArray  = await executePostPutDeleteApi(createAssetApi,"POST",addAssetApiBody);
-    if (responseAnswerArray[0].status == 201) {
+    const responseDataArray  = await executePostApi(createAssetApi,addAssetApiBody);
+    if (responseDataArray[0].status == 201) {
         window.location.reload();
     }
 }
@@ -238,8 +237,8 @@ function enterAssetDetails(dropdown: HTMLElement): void {
 
 async function deleteAsset(id: number): Promise<void> {
     const assetDeleteApi: string = deleteAssetApi + `${id}`;
-    const responseAnswerArray = await executePostPutDeleteApi(assetDeleteApi,"DELETE",{});
-    assets = responseAnswerArray[1];
+    const responseDataArray = await executeDeleteApi(assetDeleteApi,{});
+    assets = responseDataArray[1];
     window.location.reload();
 }
 
@@ -299,8 +298,8 @@ async function saveAssetDetails(tableBody: HTMLElement): Promise<void> {
         editAssetApiBody["userId"] = userId!.toString();
     }
     const updateApi: string = updateAssetApi + `${id}`;
-    const responseAnswerArray = await executePostPutDeleteApi(updateApi,"PUT",editAssetApiBody);
-    if (responseAnswerArray[0].status == 200) {
+    const responseDataArray = await executePutApi(updateApi,editAssetApiBody);
+    if (responseDataArray[0].status == 200) {
         window.location.reload();
     }
 }
@@ -351,8 +350,8 @@ async function assetAssignToUser(id: string): Promise<void> {
         "assetId": id,
         "userId": userId
     }
-    const responseAnswerArray  = await executePostPutDeleteApi(assetAssignApi,"POST",apiBody);
-    if (responseAnswerArray[0].status == 201) {
+    const responseDataArray  = await executePostApi(assetAssignApi,apiBody);
+    if (responseDataArray[0].status == 201) {
         window.location.reload();
     }
 }
@@ -407,7 +406,7 @@ async function openAsset(asset: IAsset): Promise<void> {
 
 async function assetUnassign(id: string): Promise<void> {
     const unassignAssetApi: string = assetUnassignApi + `${id}`;
-    await executePostPutDeleteApi(unassignAssetApi,"POST",{});
+    await executePostApi(unassignAssetApi,{});
     window.location.reload();
 }
 
@@ -416,10 +415,10 @@ async function requestAsset(assetId: number): Promise<void> {
         "Content-Type": "application/json",
         "Authorization": `${localStorage.getItem('token')}`
     }
-    const responseAnswerArray = await executePostPutDeleteApi(assetRequestApi,"POST",{assetId},apiHeaders);
+    const responseDataArray = await executePostApi(assetRequestApi,{assetId},apiHeaders);
 
-    if (!responseAnswerArray[0].ok) {
-        alert(responseAnswerArray[1].message);
+    if (!responseDataArray[0].ok) {
+        alert(responseDataArray[1].message);
         return;
     }
     alert("Asset request created successfully");

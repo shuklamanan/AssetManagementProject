@@ -1,6 +1,6 @@
 import {IBodyStructureForUserAPI} from "../functions/interface.ts";
 import {signupApi} from "../functions/api.ts";
-import {executePostPutDeleteApi} from "./apiExecution.ts";
+import {executePostApi} from "./apiExecution.ts";
 const commonHeaders  : HeadersInit =  {
     "Content-Type": "application/json",
     "Access-Control-Origin": "*"
@@ -10,10 +10,10 @@ if (localStorage.getItem("token")) {
 }
 
 async function postRequest(api:string,body:IBodyStructureForUserAPI):Promise<void>{
-    const responseAnswerArray  = await executePostPutDeleteApi(api,"POST",body,commonHeaders);
-    const data : Response = responseAnswerArray[1];
+    const responseDataArray  = await executePostApi(api,body,commonHeaders);
+    const data : Response = responseDataArray[1];
     localStorage.setItem("OTPtoken",data.OTPtoken)
-    if(!(responseAnswerArray[0].status >= 200 && responseAnswerArray[0].status < 300)){
+    if(!(responseDataArray[0].status >= 200 && responseDataArray[0].status < 300)){
         alert(data.message);
         return;
     }

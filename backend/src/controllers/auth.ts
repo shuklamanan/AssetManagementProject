@@ -23,10 +23,6 @@ const storeOTP = async (key: string, otp: number): Promise<void> => {
     // noinspection TypeScriptValidateTypes
     await redisClient.setEx(key, 300, otp.toString());
 };
-let tempPasswordResetObj: { [key:string]:number } = {}
-setInterval(() => {
-    tempPasswordResetObj = {}
-}, 1000000)
 
 const getOTP = async (key: string): Promise<string | null> => {
     // noinspection TypeScriptValidateTypes
@@ -97,7 +93,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 };
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
     try {
-        let {username, password} = req.body as ILoginUserRequestBody
+        let {username, password} : ILoginUserRequestBody= req.body
         if (!(username && password)) {
             res.status(400).json({message: "some fields are missing in req"})
             return
@@ -167,13 +163,14 @@ export const forgotPassword = async (req:Request, res:Response):Promise<void>=>{
             res.status(404).json({message:"username is not found"})
             return
         }
-        const user : {email:string}[] = (await client.query("SELECT email FROM users WHERE archived_at IS NULL AND username = $1",[req.body.username])).rows;
+        const user = (await client.query("SELECT * FROM users WHERE archived_at IS NULL AND username = $1",[req.body.username])).rows;
         if(user.length === 0) {
             res.status(404).json({message:"user not found"})
             return;
         }
         const otp:number = generateOTP(4)
-        tempPasswordResetObj[`${req.body.username}`] = otp
+        await storeOTP(user[0].username, otp);
+        await redisClient.setEx(`tempUser:${user[0].username}`, 300, JSON.stringify(user));
         await mailOTP(otp,user[0].email,"Password Reset")
         const token:string = generateToken({username:req.body.username},'2m');
         res.status(200).json({forgetPasswordToken:token});
@@ -190,6 +187,7 @@ export const resetPassword = async (req:Request,res:Response):Promise<void>=>{
         const otp:number=parseInt(req.body.otp);
         const password :string= req.body.password.trim();
         const confirmPassword:string = req.body.confirmPassword.trim();
+        const username:string = req.body.username;
         if(!password || !confirmPassword || password!=confirmPassword){
             res.status(400).json({message:"Both Passwords do not match"})
             return;
@@ -206,10 +204,14 @@ export const resetPassword = async (req:Request,res:Response):Promise<void>=>{
             });
             return
         }
-        if(otp!=tempPasswordResetObj[`${req.body.username}`]){
+        console.log(req.body);
+        const storedOTP = await getOTP(username);
+        if(otp!=Number(storedOTP)){
             res.status(400).json({message:"Password Reset is failed"})
             return;
         }
+        await deleteOTP(username);
+        await redisClient.del(`tempUser:${username}`);
         await client.query("UPDATE users SET password = $1 WHERE archived_at IS NULL AND username=$2",[await hashPassword(password),req.body.username]);
         res.status(200).json({message:"Password Reset Successful"})
         return

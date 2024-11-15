@@ -10,6 +10,6 @@ export const authRoutes:Router = express.Router();
 
 authRoutes.post('/login',loginUser)
 authRoutes.post('/signup',createUser)
+authRoutes.post('/verify',verifyUsername,verifyOTP)
 authRoutes.post('/password/forget',forgotPassword)
 authRoutes.post('/password/reset',verifyUsername,resetPassword);
-authRoutes.post('/verify',verifyUsername,verifyOTP)

@@ -9,6 +9,7 @@ import {isValidPassword} from "../functions/validPassword";
 import {isValidEmail} from "../functions/isValidEmail.ts";
 import mailOTP from "../functions/mailOTP.ts";
 import {hashPassword} from "../functions/hashPassword.ts";
+import redisClient from "../../redisConfig.ts";
 dotenv.config()
 const generateToken = (payload: JwtPayload,time:string) => {
     const secretKey: string = process.env.ACCESS_TOKEN_SECRET ?? ""; // Replace with your own secret key
@@ -18,15 +19,27 @@ const generateToken = (payload: JwtPayload,time:string) => {
     return jwt.sign(payload, secretKey, options);
 };
 
-let tempSignupUserObj: { [key:string]:ICreateUserRequestBody } = {}
+const storeOTP = async (key: string, otp: number): Promise<void> => {
+    // noinspection TypeScriptValidateTypes
+    await redisClient.setEx(key, 300, otp.toString());
+};
 let tempPasswordResetObj: { [key:string]:number } = {}
-let tempUsernameOTPObj: { [key:string]:number } = {}
-//if we have used redis or something similar this would be much more efficient but this works fine as well
 setInterval(() => {
-    tempSignupUserObj = {}
-    tempUsernameOTPObj = {}
     tempPasswordResetObj = {}
 }, 1000000)
+
+const getOTP = async (key: string): Promise<string | null> => {
+    // noinspection TypeScriptValidateTypes
+    return await redisClient.get(key);
+};
+
+const deleteOTP = async (key: string): Promise<void> => {
+    // noinspection TypeScriptValidateTypes
+    await redisClient.del(key);
+};
+
+//we can add date based otp system adding 5min plus date to the current otp and checking when verification if the date is < current date otherwise otp fails
+//if we have used redis or something similar this would be much more efficient but this works fine as well
 export const createUser = async (req: Request, res: Response): Promise<void> => {
     try {
         let {
@@ -60,21 +73,21 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
             return;
         }
         const otp = generateOTP(4)
-        tempUsernameOTPObj[`${username}`] = otp
-        tempSignupUserObj[`${username}`] = {
-            username: username,
+        const tempUser = {
+            username,
             first_name: firstName,
             last_name: lastName,
-            email: email,
-            password: password,
-            role : ['Employee'],
+            email,
+            password,
+            role: ['Employee'],
             phone_number: phoneNumber,
-            department: department??null,
+            department: department ?? null,
             date_of_birth: dateOfBirth,
-        }
+        };
+        await storeOTP(username, otp);
+        await redisClient.setEx(`tempUser:${username}`, 300, JSON.stringify(tempUser));
         let token:string = generateToken({username:username},'24h')
         await mailOTP(otp,email,"OTP verification")
-        console.log(tempUsernameOTPObj,tempSignupUserObj)
         res.status(200).json({OTPtoken:token});
         return;
     } catch (error: any) {
@@ -112,14 +125,36 @@ export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
     try {
         let username:string = req.body.username
         let otp:number = Number(req.body.otp)
-        console.log(otp,tempUsernameOTPObj[`${username}`])
-        if(tempUsernameOTPObj[`${username}`]===otp){
-            let user :ICreateUserRequestBody = tempSignupUserObj[`${username}`]
-            await client.query("insert into users(username, first_name, last_name, role, email, password, phone_number, department, date_of_birth) values ($1,$2,$3,Array ['Employee']::role[],$4,$5,$6,$7,$8)", [username, user.first_name, user.last_name, user.email, await hashPassword(user.password), user.phone_number, user.department ?? null, user.date_of_birth ?? null])
-            res.status(200).json({message:"signup successful"})
+        const storedOTP = await getOTP(username);
+        if (!storedOTP || Number(storedOTP) != otp) {
+            res.status(400).json({ message: 'invalid or expired OTP.' });
             return
         }
-        res.status(400).json({message:"signup failed"})
+        const userString = await redisClient.get(`tempUser:${username}`);
+        if (!userString) {
+            res.status(400).json({ message: 'User data expired or not found.' });
+            return;
+        }
+
+        const user = JSON.parse(userString) as ICreateUserRequestBody;
+
+        await client.query(
+            'INSERT INTO users(username, first_name, last_name, role, email, password, phone_number, department, date_of_birth) VALUES ($1, $2, $3, ARRAY [\'Employee\']::role[], $4, $5, $6, $7, $8)',
+            [
+                user.username,
+                user.first_name,
+                user.last_name,
+                user.email,
+                await hashPassword(user.password),
+                user.phone_number,
+                user.department,
+                user.date_of_birth,
+            ]
+        );
+
+        await deleteOTP(username);
+        await redisClient.del(`tempUser:${username}`);
+        res.status(200).json({ message: 'Signup successful.' });
     } catch (error: any) {
         res.status(500).json({message: error?.message});
         return

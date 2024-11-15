@@ -4,6 +4,7 @@
   "description": "",
   "scripts": {
     "build": "tsc",
+    "test": "nodemon --watch src -e ts --exec ts-node src/test.ts",
     "start": "node dist/server.js",
     "dev": "nodemon --watch src -e ts --exec ts-node src/server.ts",
     "devConsumerUser": "nodemon --watch src -e ts --exec ts-node src/consumers/userNotification.ts",
@@ -28,7 +29,8 @@
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.16",
-    "pg": "^8.13.1"
+    "pg": "^8.13.1",
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "@types/amqplib": "^0.10.5",
@@ -36,6 +38,7 @@
     "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.0",
     "@types/nodemailer": "^6.4.16",
+    "@types/redis": "^4.0.11",
     "nodemon": "^3.1.7",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3"

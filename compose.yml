@@ -17,8 +17,11 @@ services:
       - postgres
       - rabbitmq
       - mailhog
+      - redis
     environment:
       RABBITMQ_URL: amqp://rabbitmq
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
 
   user_notification_consumer:
     build: ./backend
@@ -28,14 +31,16 @@ services:
       - rabbitmq
     environment:
       RABBITMQ_URL: amqp://rabbitmq
+
   asset_notification_consumer:
     build: ./backend
     container_name: asset_notification_consumer
-    command: [ "npm", "run","devConsumerAsset" ]
+    command: [ "npm", "run", "devConsumerAsset" ]
     depends_on:
       - rabbitmq
     environment:
       RABBITMQ_URL: amqp://rabbitmq
+
   postgres:
     image: postgres:13-alpine
     environment:
@@ -63,6 +68,12 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
 
 volumes:
   pgAssetManagement:

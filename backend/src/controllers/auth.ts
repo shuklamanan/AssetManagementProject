@@ -10,7 +10,9 @@ import {isValidEmail} from "../functions/isValidEmail.ts";
 import mailOTP from "../functions/mailOTP.ts";
 import {hashPassword} from "../functions/hashPassword.ts";
 import redisClient from "../../redisConfig.ts";
+
 dotenv.config()
+
 const generateToken = (payload: JwtPayload,time:string) => {
     const secretKey: string = process.env.ACCESS_TOKEN_SECRET ?? ""; // Replace with your own secret key
     const options = {
@@ -91,6 +93,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
         return;
     }
 };
+
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
     try {
         let {username, password} : ILoginUserRequestBody= req.body
@@ -117,6 +120,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         return
     }
 };
+
 export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
     try {
         let username:string = req.body.username
@@ -170,10 +174,8 @@ export const forgotPassword = async (req:Request, res:Response):Promise<void>=>{
         }
         const otp:number = generateOTP(4)
         await storeOTP(user[0].username, otp);
-        await redisClient.setEx(`tempUser:${user[0].username}`, 300, JSON.stringify(user));
         await mailOTP(otp,user[0].email,"Password Reset")
-        const token:string = generateToken({username:req.body.username},'2m');
-        res.status(200).json({forgetPasswordToken:token});
+        res.status(200).json({username:req.body.username});
         return;
     }
     catch(error:any){
@@ -211,7 +213,6 @@ export const resetPassword = async (req:Request,res:Response):Promise<void>=>{
             return;
         }
         await deleteOTP(username);
-        await redisClient.del(`tempUser:${username}`);
         await client.query("UPDATE users SET password = $1 WHERE archived_at IS NULL AND username=$2",[await hashPassword(password),req.body.username]);
         res.status(200).json({message:"Password Reset Successful"})
         return

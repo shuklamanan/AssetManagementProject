@@ -6,8 +6,13 @@ const commonHeaders  : HeadersInit =  {
     "Access-Control-Origin": "*",
     "Authorization": localStorage.getItem("resetPasswordToken")!
 }
+
 if (localStorage.getItem("token")!=null) {
     window.location.href = "/src/html/index.html"
+}
+
+if(!localStorage.getItem("username")){
+    window.location.href = "/src/html/forgetPassword.html"
 }
 
 async function postRequest(api:string,body:IResetPassword): Promise<void>{
@@ -22,6 +27,7 @@ async function postRequest(api:string,body:IResetPassword): Promise<void>{
         window.location.href = "/src/html/login.html";
     }
 }
+
 const resetPasswordForm : HTMLFormElement = <HTMLFormElement>document.getElementById('reset-password-form');
 resetPasswordForm.addEventListener("submit", async (e: Event): Promise<void> => {
     e.preventDefault();
@@ -31,7 +37,8 @@ resetPasswordForm.addEventListener("submit", async (e: Event): Promise<void> => 
     const body : IResetPassword = {
         otp:formValues.otp,
         password:formValues.newPassword,
-        confirmPassword:formValues.confirmPassword
+        confirmPassword:formValues.confirmPassword,
+        username:localStorage.getItem('username')!
     };
     await postRequest(resetPasswordApi, body);
 });

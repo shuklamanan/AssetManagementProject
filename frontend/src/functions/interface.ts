@@ -67,7 +67,7 @@ export interface IForgetPassword{
 }
 
 export interface IForgetPasswordToken{
-    forgetPasswordToken?:string
+    username?:string
     message?:string
 }
 
@@ -75,6 +75,7 @@ export interface IResetPassword{
     otp:number,
     password:string,
     confirmPassword:string,
+    username:string
 }
 
 

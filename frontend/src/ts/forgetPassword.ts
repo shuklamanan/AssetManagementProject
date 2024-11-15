@@ -1,10 +1,12 @@
 import {IForgetPassword, IForgetPasswordToken} from "../functions/interface.ts";
 import {forgetPasswordApi} from "../functions/api.ts";
 import {executePostApi} from "./apiExecution.ts";
+
 const commonHeaders  : HeadersInit =  {
     "Content-Type": "application/json",
     "Access-Control-Origin": "*"
 }
+
 if (localStorage.getItem("token")!=null) {
     window.location.href = "/src/html/index.html"
 }
@@ -18,11 +20,12 @@ async function postRequest(api:string,body:IForgetPassword): Promise<void>{
         alert(data.message)
         return;
     }
-    if(data.forgetPasswordToken){
-        localStorage.setItem('resetPasswordToken', data.forgetPasswordToken);
+    if(data.username){
+        localStorage.setItem('username', data.username);
         window.location.href = "/src/html/resetPassword.html";
     }
 }
+
 const forgetPasswordForm : HTMLFormElement = <HTMLFormElement>document.getElementById('forgetPasswordForm');
 forgetPasswordForm.addEventListener("submit", async (e: Event): Promise<void> => {
     e.preventDefault();

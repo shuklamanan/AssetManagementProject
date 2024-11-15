@@ -33,6 +33,7 @@ async function deleteUser(user: IUser): Promise<void> {
         console.log(`User ${user.id} deleted successfully`);
         users = await fetchUsers();
         displayUsers(users)
+        window.location.reload();
     } else {
         console.log('Failed to delete user');
     }

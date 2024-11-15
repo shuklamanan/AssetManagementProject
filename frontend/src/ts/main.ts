@@ -9,7 +9,7 @@ import {
     deleteAssetApi,
     getAllAssetsApi,
     getAllUsersApi,
-    getRolesApi,
+    getRolesApi, headers,
     updateAssetApi
 } from "../functions/api.ts";
 import {executeDeleteApi, executeGetApi, executePostApi, executePutApi} from "./apiExecution.ts";
@@ -237,7 +237,7 @@ function enterAssetDetails(dropdown: HTMLElement): void {
 
 async function deleteAsset(id: number): Promise<void> {
     const assetDeleteApi: string = deleteAssetApi + `${id}`;
-    const responseDataArray = await executeDeleteApi(assetDeleteApi,{});
+    const responseDataArray = await executeDeleteApi(assetDeleteApi,headers);
     assets = responseDataArray[1];
     window.location.reload();
 }

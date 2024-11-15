@@ -237,7 +237,7 @@ function enterAssetDetails(dropdown: HTMLElement): void {
 
 async function deleteAsset(id: number): Promise<void> {
     const assetDeleteApi: string = deleteAssetApi + `${id}`;
-    const responseDataArray = await executeDeleteApi(assetDeleteApi,headers);
+    const responseDataArray = await executeDeleteApi(assetDeleteApi);
     assets = responseDataArray[1];
     window.location.reload();
 }

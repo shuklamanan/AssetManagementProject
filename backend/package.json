@@ -5,7 +5,9 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "nodemon --watch src -e ts --exec ts-node src/server.ts"
+    "dev": "nodemon --watch src -e ts --exec ts-node src/server.ts",
+    "devConsumerUser": "nodemon --watch src -e ts --exec ts-node src/consumers/userNotification.ts",
+    "devConsumerAsset": "nodemon --watch src -e ts --exec ts-node src/consumers/assetNotification.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +19,7 @@
     "@types/pg": "^8.11.10",
     "@typescript-eslint/eslint-plugin": "^7.5.0",
     "@typescript-eslint/parser": "^7.5.0",
+    "amqplib": "^0.10.4",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -28,6 +31,7 @@
     "pg": "^8.13.1"
   },
   "devDependencies": {
+    "@types/amqplib": "^0.10.5",
     "@types/cors": "^2.8.17",
     "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.0",

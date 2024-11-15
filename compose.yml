@@ -15,7 +15,27 @@ services:
       - 5001:5001
     depends_on:
       - postgres
+      - rabbitmq
+      - mailhog
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq
 
+  user_notification_consumer:
+    build: ./backend
+    container_name: user_notification_consumer
+    command: [ "npm", "run","devConsumerUser"]
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq
+  asset_notification_consumer:
+    build: ./backend
+    container_name: asset_notification_consumer
+    command: [ "npm", "run","devConsumerAsset" ]
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq
   postgres:
     image: postgres:13-alpine
     environment:
@@ -26,12 +46,23 @@ services:
       - 9000:5432
     volumes:
       - pgAssetManagement:/var/lib/postgresql/data
+
   mailhog:
     container_name: mailhog
     image: mailhog/mailhog:latest
     ports:
       - "1025:1025"
       - "8025:8025"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"      # RabbitMQ port for communication
+      - "15672:15672"    # RabbitMQ management dashboard
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
 
 volumes:
   pgAssetManagement:

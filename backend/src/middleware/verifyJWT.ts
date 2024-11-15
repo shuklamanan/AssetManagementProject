@@ -7,7 +7,7 @@ export const verifyJwt = async (req :Request,res:Response,next:NextFunction):Pro
     try {
         const authToken : string | undefined = req.header("Authorization");
         if(!authToken){
-            res.sendStatus(401)
+            res.status(401).json({message:"No token provided"})
             return
         }
         const payload : JwtPayload = jwt.verify(authToken,process.env.ACCESS_TOKEN_SECRET??"") as JwtPayload

@@ -1,7 +1,6 @@
 import client from "../../postgresConfig.ts"
 import {Request, Response} from "express";
 import {ICreateAssetRequestBody, IPendingAssetRequest} from "../interfaces.ts";
-import {updateAsset} from "./asset.ts";
 import mailAsset from "../functions/mailAsset.ts";
 import {publishAssetNotification} from "../publishers/mailAsset.ts";
 
@@ -78,55 +77,45 @@ export const updateRequestStatus = async (req: Request, res: Response): Promise<
         }
         if (status === 'Disapproved') {
             const updateStatus = (await client.query(`UPDATE asset_requests SET status = $1 WHERE id = $2 AND status = 'Pending' RETURNING *`, [status, id])).rows[0];
-            await publishAssetNotification({
-                sub: "Asset Request Disapproved",
-                title: "Your asset request has been disapproved",
-                assetId: updateStatus.asset_id,
-                userId: updateStatus.user_id
-            })
-            res.status(200).json({ message: "Asset request disapproved successfully" });
-            return;
+            if(updateStatus){
+                await publishAssetNotification({
+                    sub: "Asset Request Disapproved",
+                    title: "Your asset request has been disapproved",
+                    assetId: updateStatus.asset_id,
+                    userId: updateStatus.user_id
+                })
+                res.status(200).json({ message: "Asset request disapproved successfully" });
+                return;
+            }else{
+                res.status(200).json({ message: "Asset request is already fulfilled" });
+                return;
+            }
         }
-        const userResult: { id:number }[] = (await client.query(
-            `SELECT u.id FROM users u 
-            JOIN asset_requests ar ON u.id = ar.user_id 
-            WHERE ar.id = $1 AND u.archived_at IS NULL`,
+        const userAndAssetResult: { user_id:number,asset_id:number, is_user_archived : string , is_asset_archived:string} [] = (await client.query(
+            `SELECT u.id AS user_id,a.id AS asset_id,u.archived_at AS is_user_archived,a.archived_at AS is_asset_archived FROM users u JOIN asset_requests ar ON u.id = ar.user_id JOIN assets a ON ar.asset_id = a.id
+            WHERE ar.id = $1`,
             [id]
         )).rows
-        if(!userResult.length){
-            res.status(400).json({ message: "user associated with request is archived" });
+        console.log(userAndAssetResult,id);
+        const isUserArchived :string|null =  userAndAssetResult[0].is_user_archived ?? null;
+        const isAssetArchived:string|null =  userAndAssetResult[0].is_asset_archived ?? null;
+        console.log(isAssetArchived);
+        console.log(isUserArchived);
+        if(isUserArchived || isAssetArchived){
+            res.status(400).json({ message: (isUserArchived) ? "user associated with request is archived" : "asset associated with request is archived" });
             return;
         }
-        const userId = userResult[0].id
-        const assetResult: { id:number }[] = (await client.query(
-            `SELECT a.id FROM assets a 
-            JOIN asset_requests ar ON a.id = ar.asset_id 
-            WHERE ar.id = $1 AND a.archived_at IS NULL`,
-            [id]
-        )).rows
-        if(!assetResult.length){
-            res.status(400).json({ message: "asset associated with request is archived" });
+        const userId:number = userAndAssetResult[0].user_id
+        const assetId:number = userAndAssetResult[0].asset_id
+        const isUserAssignedOrNot = (await client.query(
+            `UPDATE assets SET user_id = $1 WHERE id = $2 AND EXISTS(select 1 from asset_requests where status='Pending' and id=$3) AND EXISTS(SELECT 1 FROM assets WHERE id = $2 AND user_id IS NULL) RETURNING *`,
+            [userId, assetId,id]
+        )).rows;
+        console.log(isUserAssignedOrNot);
+        if(!isUserAssignedOrNot.length){
+            res.status(400).json({ message: `Either request is already fulfilled OR asset with ${assetId} is already assigned to someone` });
             return;
         }
-        const assetId = assetResult[0].id
-        let isPending = (await client.query("select 1 from asset_requests where status='Pending' and id=$1",[id])).rows.length
-        if(!isPending){
-            res.status(400).json({ message: "request is already fullfilled" });
-            return;
-        }
-
-        const assignedCheck = (await client.query(
-            `SELECT 1 FROM assets WHERE id = $1 AND user_id IS NULL`,
-            [assetId]
-        )).rows.length;
-        if (!assignedCheck) {
-            res.status(400).json({ message: "asset with id "+assetId+" is already assigned to someone" });
-            return;
-        }
-        await client.query(
-            `UPDATE assets SET user_id = $1 WHERE id = $2`,
-            [userId, assetId]
-        );
         await client.query(
             `INSERT INTO asset_history (asset_id, user_id, assigned_by, assigned_at, unassigned_at) 
             VALUES ($1, $2, $3, NOW(), NULL)`,

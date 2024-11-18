@@ -9,14 +9,15 @@ import {
     deleteAssetApi,
     getAllAssetsApi,
     getAllUsersApi,
-    getRolesApi, headers,
+    getRolesApi,
     updateAssetApi
 } from "../functions/api.ts";
 import {executeDeleteApi, executeGetApi, executePostApi, executePutApi} from "./apiExecution.ts";
+import {isTokenAvailableOrNot, logout} from "../functions/helperFunctions.ts";
 
-if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
-    window.location.href = "/src/html/login.html";
-}
+const logoutButton:HTMLElement = document.getElementById("logout")!;
+
+isTokenAvailableOrNot();
 
 function displayContentBasedOnRoles(roles: string[]): void {
     if (!roles.includes('Admin')) {
@@ -147,13 +148,7 @@ async function displayAssets(assets: IAsset[]): Promise<void> {
         tbody = appendChildToParent(tbody, row);
     }
     if (isAdmin) {
-        const dropdownForAssetAssign: HTMLElement = document.createElement('div')
-        const addAssetAssetName: HTMLElement = document.getElementById('addAssetAssetName')!;
-        addAssetAssetName.value = "";
-        await getDataOfUser(dropdownForAssetAssign);
-        addAssetBtn!.setAttribute('data-toggle', 'modal');
-        addAssetBtn!.setAttribute('data-target', '#addAssetModal');
-        addAssetBtn!.onclick = () => enterAssetDetails(dropdownForAssetAssign);
+        await openModal(addAssetBtn!);
         const requestColumn: HTMLElement | null = document.getElementById('requestColumn');
         if (requestColumn) {
             requestColumn.parentNode!.removeChild(requestColumn);
@@ -167,6 +162,16 @@ async function displayAssets(assets: IAsset[]): Promise<void> {
             closeColumn.parentNode!.removeChild(closeColumn);
         }
     }
+}
+
+async function openModal(openModalButton : HTMLElement){
+    const dropdownForAssetAssign: HTMLElement = document.createElement('div')
+    const addAssetAssetName: HTMLElement = document.getElementById('addAssetAssetName')!;
+    addAssetAssetName.value = "";
+    await getDataOfUser(dropdownForAssetAssign);
+    openModalButton!.setAttribute('data-toggle', 'modal');
+    openModalButton!.setAttribute('data-target', '#addAssetModal');
+    openModalButton!.onclick = () => enterAssetDetails(dropdownForAssetAssign);
 }
 
 function addAssetAssignDropDown(dropdown: HTMLElement): void {
@@ -425,8 +430,4 @@ async function requestAsset(assetId: number): Promise<void> {
     window.location.reload();
 }
 
-
-document.getElementById("logout")!.addEventListener('click', () => {
-    localStorage.clear();
-    location.href = "/src/html/login.html"
-})
+logout(logoutButton);

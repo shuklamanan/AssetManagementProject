@@ -80,7 +80,14 @@ export function createTable(tableHead:HTMLElement,parentNode:HTMLElement,data: (
         if(buttonAppear){
             for(let i:number=0;i<buttonFunctions.length; i++){
                 const buttonCell: HTMLTableCellElement = document.createElement('td');
-                if(storedButtons.get(buttonText[i]) && item.username !== profileDetails.username) {
+                if(disableForAdmin.length){
+                    if(storedButtons.get(buttonText[i]) && item.username !== profileDetails.username) {
+                        const button: HTMLButtonElement = createButtons(document.createElement('button'), "", buttonClasses[i], buttonText[i]);
+                        button.onclick = () => buttonFunctions[i](item);
+                        buttonCell.appendChild(button);
+                    }
+                }
+                else{
                     const button: HTMLButtonElement = createButtons(document.createElement('button'), "", buttonClasses[i], buttonText[i]);
                     button.onclick = () => buttonFunctions[i](item);
                     buttonCell.appendChild(button);

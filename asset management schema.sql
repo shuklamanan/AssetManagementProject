@@ -48,6 +48,14 @@ CREATE TABLE "asset_history"
     "unassigned_at" timestamp
 );
 
+CREATE TABLE "message"
+(
+    "id"            SERIAL PRIMARY KEY,
+    "message_sender"   bigint,
+    "message"       varchar(255),
+    "sending_at"   timestamp
+);
+
 ALTER TABLE "assets"
     ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
 
@@ -65,3 +73,6 @@ ALTER TABLE "asset_requests"
 
 ALTER TABLE "asset_requests"
     ADD FOREIGN KEY ("asset_id") REFERENCES "assets" ("id");
+
+ALTER TABLE "message"
+    ADD FOREIGN KEY ("message_sender") REFERENCES "users" ("id");

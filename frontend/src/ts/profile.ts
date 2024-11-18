@@ -1,24 +1,15 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts';
-import {getProfileApi} from "../functions/api.ts";
-import {executeGetApi} from "./apiExecution.ts";
-if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
-    window.location.href = "/src/html/login.html";
-}
+import {displayContentBasedOnRoles, isTokenAvailableOrNot, logout} from "../functions/helperFunctions.ts";
+import {profileDetails} from "../functions/getProfileDeatails.ts";
 
-async function displayContentBasedOnRoles(roles: string[]): Promise<void> {
-    if (!roles.includes('Admin')) {
-        document.getElementById("user-nav")!.style.display = "none";
-        document.getElementById("asset-history-nav")!.style.display = "none";
-        document.getElementById("asset-request-nav")!.style.display = "none";
-    }
-}
+const logoutElement:HTMLElement = document.getElementById("logout")!;
+isTokenAvailableOrNot()
 
 const roles: string[] = await fetchUserRoles();
-await displayContentBasedOnRoles(roles);
+displayContentBasedOnRoles(roles);
 
 async function fetchUserProfile() : Promise<void> {
-    const responseDataArray  = await executeGetApi(getProfileApi);
-    const userData = responseDataArray[1];
+    const userData = profileDetails;
     console.log(userData);
     (<HTMLElement>document.getElementById('username')).textContent = userData.username || "N/A";
     (<HTMLElement>document.getElementById('fullName')).textContent = userData.firstName + " " + userData.lastName || "N/A";
@@ -29,8 +20,5 @@ async function fetchUserProfile() : Promise<void> {
     (<HTMLElement>document.getElementById('joiningDate')).textContent = userData.joiningDate.substring(0,10) || "N/A";
 }
 
-document.getElementById("logout")!.addEventListener('click',()=>{
-    localStorage.clear();
-    location.href = "/src/html/login.html"
-})
+logout(logoutElement);
 await fetchUserProfile();

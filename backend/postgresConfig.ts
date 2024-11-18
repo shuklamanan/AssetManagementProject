@@ -7,7 +7,7 @@ const client = new Client({
     database: process.env.POSTGRES_DATABASE??"",
     password: process.env.POSTGRES_PASSWORD??"",
     port: Number(process.env.POSTGRES_PORT)??5432,
-    // host: process.env.POSTGRES_DOCKER_HOST??"localhost"
+    host: process.env.POSTGRES_DOCKER_HOST??"localhost"
 })
 async function connectToDatabase() {
     try {

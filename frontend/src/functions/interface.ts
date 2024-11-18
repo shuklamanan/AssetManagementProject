@@ -77,9 +77,3 @@ export interface IResetPassword{
     confirmPassword:string,
     username:string
 }
-
-
-
-
-
-

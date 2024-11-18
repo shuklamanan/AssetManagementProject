@@ -4,6 +4,7 @@ import {executePostApi} from "./apiExecution.ts";
 if(!localStorage.getItem("OTPtoken")){
     location.href='../html/register.html'
 }
+
 async function postRequest(api:string,body: { otp:number }):Promise<void>{
     const apiHeaders:object={
         'Authorization': `${localStorage.getItem('OTPtoken')}`,
@@ -19,6 +20,7 @@ async function postRequest(api:string,body: { otp:number }):Promise<void>{
         window.location.reload()
     }
 }
+
 const registrationForm: HTMLFormElement = <HTMLFormElement>document.getElementById("registrationForm");
 registrationForm.addEventListener("submit", async(e : Event) :Promise<void> => {
     e.preventDefault();

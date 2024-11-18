@@ -3,20 +3,16 @@ import {IAssetHistory} from "../functions/interface.ts";
 import {assetHistoryApi} from "../functions/api.ts";
 import {executeGetApi} from "./apiExecution.ts";
 import {createTable} from "./tables.ts";
-import {emptyFunction} from "../functions/emptyFunctions.ts";
+import {emptyFunction, isTokenAvailableOrNot, logout} from "../functions/helperFunctions.ts";
 
-if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
-    window.location.href = "/src/html/login.html";
-}
+const logoutElement:HTMLElement = document.getElementById("logout")!;
+
+isTokenAvailableOrNot()
 const roles : string[] = await fetchUserRoles();
 if(!roles.includes("Admin")){
     location.href = '/src/html/index.html'
 }
 
-document.getElementById("logout")!.addEventListener('click',() : void=>{
-    localStorage.clear();
-    location.href = "/src/html/login.html"
-})
 
 async function fetchAssetHistory(): Promise<void> {
     const responseDataArray  = await executeGetApi(assetHistoryApi);
@@ -29,7 +25,9 @@ function displayAssetHistory(assetHistory: IAssetHistory[]): void {
     let tbody : HTMLElement = <HTMLElement>document.getElementById('asset-history');
     const tableHead:HTMLElement = document.getElementById('table-head')!;
     tbody.innerHTML = '';
-    createTable(tableHead,tbody,assetHistory,[emptyFunction]);
+    createTable(tableHead,tbody,assetHistory,[emptyFunction],false,[],[],[]);
 }
+
 await fetchAssetHistory()
+logout(logoutElement);
 

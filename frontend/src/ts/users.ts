@@ -1,29 +1,19 @@
 import fetchUserRoles from '../functions/fetchUserRoles.ts'
 import {IBodyStructureForUserAPI, IUser} from "../functions/interface.ts";
-import {createUserViaAdminApi, deleteUserApi, getAllUsersApi} from "../functions/api.ts";
-import {executeDeleteApi, executeGetApi, executePostApi} from "./apiExecution.ts";
+import {createUserViaAdminApi, deleteUserApi} from "../functions/api.ts";
+import {executeDeleteApi, executePostApi} from "./apiExecution.ts";
 import {createTable} from "./tables.ts";
+import {users} from "../functions/getUsers.ts";
+import {isTokenAvailableOrNot, logout} from "../functions/helperFunctions.ts";
 
-if (localStorage.getItem("token") === null || localStorage.getItem("token") === undefined) {
-    window.location.href = "/src/html/login.html";
-}
+isTokenAvailableOrNot()
+const logoutElement:HTMLElement = document.getElementById("logout")!;
 const roles:string[] = await fetchUserRoles();
 if(!roles.includes("Admin")){
     location.href = '/src/html/index.html'
 }
-
-async function fetchUsers(): Promise<IUser[]> {
-    const responseDataArray  = await executeGetApi(getAllUsersApi);
-    return responseDataArray[1];
-}
-
-let users:IUser[] = await fetchUsers()
 displayUsers(users)
 console.log(users)
-document.getElementById("logout")!.addEventListener('click',() : void=>{
-    localStorage.clear();
-    location.href = "/src/html/login.html"
-})
 
 async function deleteUser(user: IUser): Promise<void> {
     const deleteUser: string = deleteUserApi + `${user.id}`;
@@ -31,7 +21,6 @@ async function deleteUser(user: IUser): Promise<void> {
     const responseDataArray = await executeDeleteApi(deleteUser);
     if (responseDataArray[0].ok) {
         console.log(`User ${user.id} deleted successfully`);
-        users = await fetchUsers();
         displayUsers(users)
         window.location.reload();
     } else {
@@ -45,11 +34,10 @@ function displayUsers(users: IUser[]): void {
     const tableHead:HTMLElement = document.getElementById('table-head')!;
     addUserBtn!.setAttribute('data-toggle', 'modal');
     addUserBtn!.setAttribute('data-target', '#addUserModal');
-    createTable(tableHead,tbody,users,[deleteUser],true,["Delete"],["btn btn-danger"]);
+    createTable(tableHead,tbody,users,[deleteUser],true,["Delete"],["btn btn-danger"],["Delete"]);
 }
 
-
-async function postRequest(api:string,body:IBodyStructureForUserAPI):Promise<void>{
+async function createUserByAdmin(api:string,body:IBodyStructureForUserAPI):Promise<void>{
     const responseDataArray  = await executePostApi(api,body);
     const data = responseDataArray[1];
     if(!(responseDataArray[0].status >= 200 && responseDataArray[0].status < 300)){
@@ -80,5 +68,7 @@ addUserForm.addEventListener("submit", async(e : Event) :Promise<void> => {
         dateOfBirth : formValues.dateOfBirth,
     }
     console.log(body);
-    await postRequest(createUserViaAdminApi,body);
+    await createUserByAdmin(createUserViaAdminApi,body);
 })
+
+logout(logoutElement);

@@ -63,17 +63,6 @@ export interface IAsset{
 
 export interface IMergeDetailsOfAssetAndUser extends ICreateAssetRequestBody , ICreateUserRequestBody{}
 
-interface IAssetAndUser{
-    username:string,
-    assetName : string,
-    email:string,
-    assetType:string
-}
-
-export interface IAssetAndUserDetails{
-   rows:IAssetAndUser[]
-}
-
 export interface IMergeDetailsOfAssetAndUserAndAssetHistory{
     id?: number,
     user_id : number,
@@ -91,7 +80,4 @@ export interface IPendingAssetRequest {
     status: string;
     assetName: string;
     username: string;
-}
-export interface IUserAndAssetAndAssetHistory{
-    rows : IMergeDetailsOfAssetAndUserAndAssetHistory[];
 }

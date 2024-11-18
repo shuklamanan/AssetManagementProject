@@ -18,14 +18,16 @@ async function consumeAssetNotifications() {
                 let userId = notificationData.userId
                 let user = (await client.query("select * from users where id=$1 and archived_at is null",[userId])).rows[0]
                 let asset = (await client.query("select * from assets where id=$1 and archived_at is null",[assetId])).rows[0]
-                await mailAsset(
-                    user.email,
-                    notificationData.sub,
-                    asset.config,
-                    asset.name,
-                    asset.asset_type,
-                    notificationData.title
-                );
+                if(user && asset) {
+                    await mailAsset(
+                        user.email,
+                        notificationData.sub,
+                        asset.config,
+                        asset.name,
+                        asset.asset_type,
+                        notificationData.title
+                    );
+                }
 
                 channel.ack(message);
             }

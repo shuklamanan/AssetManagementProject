@@ -20,11 +20,11 @@ export default async function mailOTP(otp:number,email:string,sub:string) {
                 subject: sub,
                 html: data
             };
-            transporter.sendMail(mainOptions, function (err, info) {
-                if (err) {
-                    console.log(err);
+            transporter.sendMail(mainOptions, function (error, information) {
+                if (error) {
+                    console.log(error);
                 } else {
-                    console.log('Message sent: ' + info.response);
+                    console.log('Message sent: ' + information.response);
                 }
             });
         }

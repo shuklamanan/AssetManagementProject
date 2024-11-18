@@ -1,15 +1,13 @@
 import {IAssetHistory, IAssetRequest, IUser} from "../functions/interface.ts";
-
-function createButtons(htmlNode: HTMLButtonElement, idName: string, className: string,textContent:string): HTMLButtonElement {
-    htmlNode.type = 'button';
-    htmlNode.textContent = textContent;
-    htmlNode.setAttribute('id', idName);
-    htmlNode.setAttribute('class', className);
-    return htmlNode;
-}
+import {createButtons} from "../functions/createButtons.ts";
+import {profileDetails} from "../functions/getProfileDeatails.ts";
 
 function isKeyValidOrNot(key:string):boolean{
     return key!='id' && key!='createdAt' && key!='joiningDate' && key!='userId' && key!='assetId';
+}
+
+function isKeyDateOrNot(key:string):boolean{
+    return key=='dateOfBirth' || key=='assignedAt' || key=='unassignedAt';
 }
 
 function convertCamelCaseToPascalCase(columnName:string):string{
@@ -47,16 +45,29 @@ function generateTableHeader(tableHead:HTMLElement,data:(IUser[] | IAssetHistory
     tableHead.appendChild(tableRow);
 }
 
-export function createTable(tableHead:HTMLElement,parentNode:HTMLElement,data: (IUser[] | IAssetHistory[] | IAssetRequest[]),buttonFunctions:Function[],buttonAppear:boolean = false,buttonText:string[] = [],buttonClasses:string[]=[]):void{
+function storeDisableForAdminButtons(disableForAdmin : string[]):Map<string,number>{
+    let map:Map<string,number> = new Map();
+    if(!disableForAdmin.length){
+        return map;
+    }
+    (disableForAdmin).forEach((element:string) => map.set(element,1));
+    return map;
+}
+
+export function createTable(tableHead:HTMLElement,parentNode:HTMLElement,data: (IUser[] | IAssetHistory[] | IAssetRequest[]),buttonFunctions:Function[],buttonAppear:boolean = false,buttonText:string[] = [],buttonClasses:string[]=[],disableForAdmin:string[]):void{
     parentNode.innerHTML = "";
-    if(!data.length){ return; }
+    if(!data.length){
+        parentNode.textContent = "No data Available";
+        return;
+    }
+    const storedButtons:Map<string,number> = storeDisableForAdminButtons(disableForAdmin);
     generateTableHeader(tableHead,data,buttonAppear,buttonText);
-    data.forEach((item):void => {
+    data.forEach((item:IUser | IAssetHistory | IAssetRequest):void => {
         const row : HTMLTableRowElement = document.createElement("tr");
         Object.entries(item).forEach(([key,value]:[string,any]) => {
             if(isKeyValidOrNot(key)) {
                 const cell: HTMLTableCellElement = document.createElement('td');
-                if(key=='dateOfBirth' || key=='assignedAt' || key=='unassignedAt'){
+                if(isKeyDateOrNot(key)){
                     cell.textContent = value ? new Date(value).toLocaleString() : 'N/A';
                 }else {
                     console.log(key,value);
@@ -65,13 +76,16 @@ export function createTable(tableHead:HTMLElement,parentNode:HTMLElement,data: (
                 row.appendChild(cell);
             }
         })
+        console.log(profileDetails.username, item.username);
         if(buttonAppear){
             for(let i:number=0;i<buttonFunctions.length; i++){
-                const deleteButtonCell : HTMLTableCellElement = document.createElement('td');
-                const deleteButton: HTMLButtonElement = createButtons(document.createElement('button'),"",buttonClasses[i],buttonText[i]);
-                deleteButton.onclick = () => buttonFunctions[i](item);
-                deleteButtonCell.appendChild(deleteButton);
-                row.appendChild(deleteButtonCell);
+                const buttonCell: HTMLTableCellElement = document.createElement('td');
+                if(storedButtons.get(buttonText[i]) && item.username !== profileDetails.username) {
+                    const button: HTMLButtonElement = createButtons(document.createElement('button'), "", buttonClasses[i], buttonText[i]);
+                    button.onclick = () => buttonFunctions[i](item);
+                    buttonCell.appendChild(button);
+                }
+                row.appendChild(buttonCell);
             }
         }
         parentNode.appendChild(row);

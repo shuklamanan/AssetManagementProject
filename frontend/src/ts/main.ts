@@ -14,6 +14,7 @@ import {
 } from "../functions/api.ts";
 import {executeDeleteApi, executeGetApi, executePostApi, executePutApi} from "./apiExecution.ts";
 import {isTokenAvailableOrNot, logout} from "../functions/helperFunctions.ts";
+import {users} from "../functions/getUsers.ts";
 
 const logoutButton:HTMLElement = document.getElementById("logout")!;
 
@@ -46,12 +47,8 @@ async function checkAdminOrNot(): Promise<boolean> {
     return roleArray.includes("Admin");
 }
 
-let users: IUser[];
-
 async function getDataOfUser(dropdownForUsers: HTMLElement): Promise<void> {
     let selectTag: HTMLElement = document.createElement('select');
-    const responseDataArray  = await executeGetApi(getAllUsersApi);
-    users = responseDataArray[1];
     selectTag.setAttribute('name', 'users');
     selectTag.setAttribute('id', 'users');
     for (let i: number = 0; i < users.length; i++) {

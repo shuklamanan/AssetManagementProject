@@ -32,7 +32,7 @@ const resetPasswordForm : HTMLFormElement = <HTMLFormElement>document.getElement
 resetPasswordForm.addEventListener("submit", async (e: Event): Promise<void> => {
     e.preventDefault();
     const formData: FormData = new FormData(resetPasswordForm);
-    const formValues : object = Object.fromEntries(formData);
+    const formValues : { [k:string] : FormDataEntryValue } = Object.fromEntries(formData);
 
     const body : IResetPassword = {
         otp:formValues.otp,

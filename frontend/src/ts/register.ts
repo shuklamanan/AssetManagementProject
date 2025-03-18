@@ -11,7 +11,7 @@ if (localStorage.getItem("token")) {
 
 async function postRequest(api:string,body:IBodyStructureForUserAPI):Promise<void>{
     const responseDataArray  = await executePostApi(api,body,commonHeaders);
-    const data : Response = responseDataArray[1];
+    const data : {OTPtoken:string,message:string} = responseDataArray[1];
     localStorage.setItem("OTPtoken",data.OTPtoken)
     if(!(responseDataArray[0].status >= 200 && responseDataArray[0].status < 300)){
         alert(data.message);
@@ -24,8 +24,8 @@ console.log(registrationForm)
 registrationForm.addEventListener("submit", async(e : Event) :Promise<void> => {
     e.preventDefault();
     const formData:FormData = new FormData(registrationForm);
-    const formValues: Object = Object.fromEntries(formData);
-    if(formValues.phoneNumber.length != 10 || parseInt(formValues.phoneNumber)<0){
+    const formValues: { [k:string | number] : FormDataEntryValue } = Object.fromEntries(formData);
+    if((formValues.phoneNumber).toString().length != 10 || parseInt(<string>formValues.phoneNumber)<0){
         alert("Please enter a valid phone number");
         location.reload();
     }
@@ -35,7 +35,7 @@ registrationForm.addEventListener("submit", async(e : Event) :Promise<void> => {
         lastName : formValues.lastName,
         email : formValues.email,
         password : formValues.password,
-        phoneNumber : parseInt(formValues.phoneNumber),
+        phoneNumber : parseInt(<string>formValues.phoneNumber),
         dateOfBirth : formValues.dateOfBirth,
     }
     await postRequest(signupApi,body);

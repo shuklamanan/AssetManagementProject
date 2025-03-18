@@ -26,7 +26,7 @@ function convertCamelCaseToPascalCase(columnName:string):string{
 
 function generateTableHeader(tableHead:HTMLElement,data:(IUser[] | IAssetHistory[] | IAssetRequest[]),buttonAppear:boolean=false,buttonText:string[]=[]){
     const tableRow:HTMLTableRowElement = document.createElement("tr");
-    Object.entries((data[0])).forEach(([key, value]:[string,any]) => {
+    Object.entries((data[0])).forEach(([key, ]:[string,any]) => {
         if(isKeyValidOrNot(key)){
             const th:HTMLTableCellElement = document.createElement("th");
             th.setAttribute('scope','col');

@@ -7,9 +7,9 @@ import {users} from "../functions/getUsers.ts";
 import {isTokenAvailableOrNot, logout} from "../functions/helperFunctions.ts";
 
 isTokenAvailableOrNot()
-const logoutElement:HTMLElement = document.getElementById("logout")!;
-const roles:string[] = await fetchUserRoles();
-if(!roles.includes("Admin")){
+const logoutElement: HTMLElement = document.getElementById("logout")!;
+const roles: string[] = await fetchUserRoles();
+if (!roles.includes("Admin")) {
     location.href = '/src/html/index.html'
 }
 displayUsers(users)
@@ -30,17 +30,17 @@ async function deleteUser(user: IUser): Promise<void> {
 
 function displayUsers(users: IUser[]): void {
     const tbody: HTMLElement = document.getElementById('userTableBody') as HTMLElement;
-    const addUserBtn : HTMLElement = <HTMLElement>document.getElementById('createUser');
-    const tableHead:HTMLElement = document.getElementById('table-head')!;
+    const addUserBtn: HTMLElement = <HTMLElement>document.getElementById('createUser');
+    const tableHead: HTMLElement = document.getElementById('table-head')!;
     addUserBtn!.setAttribute('data-toggle', 'modal');
     addUserBtn!.setAttribute('data-target', '#addUserModal');
-    createTable(tableHead,tbody,users,[deleteUser],true,["Delete"],["btn btn-danger"],["Delete"]);
+    createTable(tableHead, tbody, users, [deleteUser], true, ["Delete"], ["btn btn-danger"], ["Delete"]);
 }
 
-async function createUserByAdmin(api:string,body:IBodyStructureForUserAPI):Promise<void>{
-    const responseDataArray  = await executePostApi(api,body);
+async function createUserByAdmin(api: string, body: IBodyStructureForUserAPI): Promise<void> {
+    const responseDataArray = await executePostApi(api, body);
     const data = responseDataArray[1];
-    if(!(responseDataArray[0].status >= 200 && responseDataArray[0].status < 300)){
+    if (!(responseDataArray[0].status >= 200 && responseDataArray[0].status < 300)) {
         alert(data.message);
         return;
     }
@@ -48,27 +48,28 @@ async function createUserByAdmin(api:string,body:IBodyStructureForUserAPI):Promi
 }
 
 const addUserForm: HTMLFormElement = <HTMLFormElement>document.getElementById("addUserForm");
-addUserForm.addEventListener("submit", async(e : Event) :Promise<void> => {
+addUserForm.addEventListener("submit", async (e: Event): Promise<void> => {
     e.preventDefault();
-    const formData:FormData = new FormData(addUserForm);
-    const formValues: object = Object.fromEntries(formData);
-    const getRole : HTMLElement = document.getElementById('role')!;
-    if(formValues.phoneNumber.length != 10 || parseInt(formValues.phoneNumber)<0){
+    const formData: FormData = new FormData(addUserForm);
+    const formValues: { [k: string]: FormDataEntryValue } = Object.fromEntries(formData);
+    const getRole: HTMLElement = document.getElementById('role')!;
+    const roleValue: string | null = getRole!.nodeValue;
+    if ((formValues.phoneNumber).toString().length != 10 || parseInt(<string>formValues.phoneNumber) < 0) {
         alert("Please enter a valid phone number");
         location.reload();
     }
-    const body:IBodyStructureForUserAPI = {
-        username : formValues.username,
-        firstName : formValues.firstName,
-        lastName : formValues.lastName,
-        email : formValues.email,
-        role: [getRole.value],
-        password : formValues.password,
-        phoneNumber : parseInt(formValues.phoneNumber),
-        dateOfBirth : formValues.dateOfBirth,
+    const body: IBodyStructureForUserAPI = {
+        username: formValues.username,
+        firstName: formValues.firstName,
+        lastName: formValues.lastName,
+        email: formValues.email,
+        role: [roleValue ?? ""],
+        password: formValues.password,
+        phoneNumber: parseInt(<string>formValues.phoneNumber),
+        dateOfBirth: formValues.dateOfBirth,
     }
     console.log(body);
-    await createUserByAdmin(createUserViaAdminApi,body);
+    await createUserByAdmin(createUserViaAdminApi, body);
 })
 
 logout(logoutElement);

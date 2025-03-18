@@ -30,7 +30,7 @@ const forgetPasswordForm : HTMLFormElement = <HTMLFormElement>document.getElemen
 forgetPasswordForm.addEventListener("submit", async (e: Event): Promise<void> => {
     e.preventDefault();
     const formData: FormData = new FormData(forgetPasswordForm);
-    const formValues : object = Object.fromEntries(formData);
+    const formValues : { [k : string] : FormDataEntryValue } = Object.fromEntries(formData);
     const body : IForgetPassword = {
         username:formValues.username,
     };

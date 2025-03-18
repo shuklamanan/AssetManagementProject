@@ -15,7 +15,7 @@ import {
 import {executeDeleteApi, executeGetApi, executePostApi, executePutApi} from "./apiExecution.ts";
 import {isTokenAvailableOrNot, logout} from "../functions/helperFunctions.ts";
 
-const logoutButton:HTMLElement = document.getElementById("logout")!;
+const logoutButton: HTMLElement = document.getElementById("logout")!;
 
 isTokenAvailableOrNot();
 
@@ -40,7 +40,7 @@ displayContentBasedOnRoles(roles);
 let assets: IAsset[] = [];
 
 async function checkAdminOrNot(): Promise<boolean> {
-    const responseDataArray  = await executeGetApi(getRolesApi);
+    const responseDataArray = await executeGetApi(getRolesApi);
     const roleArray = responseDataArray[1];
     console.log(roleArray);
     return roleArray.includes("Admin");
@@ -50,7 +50,7 @@ let users: IUser[];
 
 async function getDataOfUser(dropdownForUsers: HTMLElement): Promise<void> {
     let selectTag: HTMLElement = document.createElement('select');
-    const responseDataArray  = await executeGetApi(getAllUsersApi);
+    const responseDataArray = await executeGetApi(getAllUsersApi);
     users = responseDataArray[1];
     selectTag.setAttribute('name', 'users');
     selectTag.setAttribute('id', 'users');
@@ -64,7 +64,7 @@ async function getDataOfUser(dropdownForUsers: HTMLElement): Promise<void> {
 }
 
 async function fetchAssets(): Promise<void> {
-    const responseDataArray  = await executeGetApi(getAllAssetsApi);
+    const responseDataArray = await executeGetApi(getAllAssetsApi);
     console.log(responseDataArray);
     assets = responseDataArray[1];
     console.log(assets);
@@ -73,7 +73,13 @@ async function fetchAssets(): Promise<void> {
 
 await fetchAssets()
 
-export function createButtons(htmlNode: HTMLElement, idName: string, className: string): HTMLElement {
+export function createButtons(htmlNode: HTMLElement | HTMLButtonElement, idName: string, className: string): HTMLElement | HTMLButtonElement {
+    htmlNode.setAttribute('id', idName);
+    htmlNode.setAttribute('class', className);
+    return htmlNode;
+}
+
+export function createButtons2(htmlNode: HTMLButtonElement, idName: string, className: string): HTMLButtonElement {
     htmlNode.setAttribute('id', idName);
     htmlNode.setAttribute('class', className);
     return htmlNode;
@@ -81,7 +87,7 @@ export function createButtons(htmlNode: HTMLElement, idName: string, className: 
 
 function createOpenAndCloseButtons(className: string, idName: string, targetModal: string, buttonContent: string, disabled = false): HTMLElement {
     let buttonCell: HTMLElement = document.createElement('td');
-    const button: HTMLElement = createButtons(document.createElement('button'), idName, className);
+    const button: HTMLButtonElement = createButtons2(document.createElement('button'), idName, className);
     button.type = 'button';
     button.textContent = buttonContent;
     button.setAttribute('data-toggle', 'modal');
@@ -93,10 +99,10 @@ function createOpenAndCloseButtons(className: string, idName: string, targetModa
     return buttonCell;
 }
 
-async function pendingRequests(asset : IAsset):Promise<boolean>{
+async function pendingRequests(asset: IAsset): Promise<boolean> {
     console.log(asset);
-    const pendingAssetsApi:string = assetPendingApi + `${asset.id}`;
-    const responseDataArray  = await executeGetApi(pendingAssetsApi);
+    const pendingAssetsApi: string = assetPendingApi + `${asset.id}`;
+    const responseDataArray = await executeGetApi(pendingAssetsApi);
     const res = responseDataArray[1];
     return res.message == "Your request is still pending";
 }
@@ -120,22 +126,22 @@ async function displayAssets(assets: IAsset[]): Promise<void> {
 
         const ownerCell: HTMLElement = document.createElement('td');
         ownerCell.textContent = 'Unassigned';
-        const openButtonCell: HTMLElement = createOpenAndCloseButtons('btn btn-primary', "openButton", '#assetModal', 'Open');
-        openButtonCell.firstChild!.onclick = () => openAsset(asset);
+        const openButtonCell: any = createOpenAndCloseButtons('btn btn-primary', "openButton", '#assetModal', 'Open');
+        const openButton: any = openButtonCell.firstChild!
+        openButton!.onclick = () => openAsset(asset);
         if (isAdmin) {
-            const deleteButtonCell: HTMLElement = createOpenAndCloseButtons('btn btn-danger', "deleteButton", '#deleteModal', 'Delete');
+            const deleteButtonCell: any = createOpenAndCloseButtons('btn btn-danger', "deleteButton", '#deleteModal', 'Delete');
             deleteButtonCell!.firstChild!.onclick = () => deleteAsset(asset.id);
             ownerCell.textContent = asset.username || "Unassigned";
-            row = appendChildToParent(row, idCell, nameCell, typeCell, ownerCell, openButtonCell,deleteButtonCell);
+            row = appendChildToParent(row, idCell, nameCell, typeCell, ownerCell, openButtonCell, deleteButtonCell);
         } else {
-            const pendingRequestOrNot : boolean = await pendingRequests(asset);
-            const requestButtonCell:HTMLElement = createOpenAndCloseButtons('btn btn-secondary', "requestButton", '#requestModal', 'Request Asset');
-            if(asset.username){
+            const pendingRequestOrNot: boolean = await pendingRequests(asset);
+            const requestButtonCell: any = createOpenAndCloseButtons('btn btn-secondary', "requestButton", '#requestModal', 'Request Asset');
+            if (asset.username) {
                 ownerCell.textContent = 'You';
                 requestButtonCell.textContent = '';
                 requestButtonCell!.disabled = true;
-            }
-            else {
+            } else {
                 if (pendingRequestOrNot) {
                     requestButtonCell.textContent = 'Pending...';
                     requestButtonCell!.disabled = true;
@@ -143,7 +149,7 @@ async function displayAssets(assets: IAsset[]): Promise<void> {
                     requestButtonCell!.firstChild!.onclick = () => requestAsset(asset.id);
                 }
             }
-            row = appendChildToParent(row, idCell, nameCell, typeCell, ownerCell, openButtonCell,requestButtonCell);
+            row = appendChildToParent(row, idCell, nameCell, typeCell, ownerCell, openButtonCell, requestButtonCell);
         }
         tbody = appendChildToParent(tbody, row);
     }
@@ -164,10 +170,10 @@ async function displayAssets(assets: IAsset[]): Promise<void> {
     }
 }
 
-async function openModal(openModalButton : HTMLElement){
+async function openModal(openModalButton: HTMLElement) {
     const dropdownForAssetAssign: HTMLElement = document.createElement('div')
     const addAssetAssetName: HTMLElement = document.getElementById('addAssetAssetName')!;
-    addAssetAssetName.value = "";
+    addAssetAssetName.nodeValue = "";
     await getDataOfUser(dropdownForAssetAssign);
     openModalButton!.setAttribute('data-toggle', 'modal');
     openModalButton!.setAttribute('data-target', '#addAssetModal');
@@ -181,7 +187,7 @@ function addAssetAssignDropDown(dropdown: HTMLElement): void {
     addAssetDropDownForUsers.innerHTML = "";
     let noUserPresent: boolean = false;
     (dropdown!.firstChild!.childNodes).forEach(option => {
-        if (option.value == "noUser") {
+        if (option.nodeValue == "noUser") {
             noUserPresent = true;
         }
     })
@@ -214,19 +220,19 @@ async function addAsset(dropdown: HTMLElement): Promise<void> {
     const assetType: HTMLElement = document.getElementById('assetType')!;
     let configObj: Record<string, string> = {};
     for (let i: number = 1; i < getConfigDetail.length; i += 2) {
-        configObj[getConfigDetail[i].value] = getConfigDetail[i + 1].value;
+        configObj[getConfigDetail[i].nodeValue!!] = getConfigDetail[i + 1].nodeValue!!;
     }
-    const assignUser: string | undefined = (dropdown!.firstChild!.value == "noUser") ? undefined : dropdown!.firstChild!.value;
+    const assignUser: string | null | undefined = (dropdown!.firstChild!.nodeValue == "noUser") ? undefined : dropdown!.firstChild!.nodeValue;
     const addAssetApiBody: Record<string, string | Record<string, string>> = {
-        "name": getConfigDetail[0].value,
-        "assetType": assetType.value,
+        "name": getConfigDetail[0].nodeValue!!,
+        "assetType": assetType.nodeValue!!,
         "config": configObj
     }
     if (assignUser) {
-        const userId: number | undefined = getIdFromUsername(dropdown!.firstChild!.value);
+        const userId: number | undefined = getIdFromUsername(dropdown!.firstChild!.nodeValue!!);
         addAssetApiBody["userId"] = userId!.toString();
     }
-    const responseDataArray  = await executePostApi(createAssetApi,addAssetApiBody);
+    const responseDataArray = await executePostApi(createAssetApi, addAssetApiBody);
     if (responseDataArray[0].status == 201) {
         window.location.reload();
     }
@@ -289,13 +295,13 @@ async function saveAssetDetails(tableBody: HTMLElement): Promise<void> {
     const assignedAssetOrNot: HTMLElement = document.getElementById('modalAssetOwner')!;
     let configObj: Record<string, string> = {};
     for (let i: number = 0; i < editAssetConfigDetails.length; i += 2) {
-        if (editAssetConfigDetails[i].value.trim().length && editAssetConfigDetails[i + 1].value.trim().length) {
-            configObj[editAssetConfigDetails[i].value] = editAssetConfigDetails[i + 1].value;
+        if (editAssetConfigDetails[i].nodeValue!!.trim().length && editAssetConfigDetails[i + 1].nodeValue!!.trim().length) {
+            configObj[editAssetConfigDetails[i].nodeValue!!] = editAssetConfigDetails[i + 1].nodeValue!!;
         }
     }
     let editAssetApiBody: Record<string, string | Record<string, string>> = {
-        "name": name.value,
-        "assetType": assetType.value,
+        "name": name.nodeValue!!,
+        "assetType": assetType.nodeValue!!,
         "config": configObj
     };
     if (assignedAssetOrNot.textContent != 'Unassigned') {
@@ -303,7 +309,7 @@ async function saveAssetDetails(tableBody: HTMLElement): Promise<void> {
         editAssetApiBody["userId"] = userId!.toString();
     }
     const updateApi: string = updateAssetApi + `${id}`;
-    const responseDataArray = await executePutApi(updateApi,editAssetApiBody);
+    const responseDataArray = await executePutApi(updateApi, editAssetApiBody);
     if (responseDataArray[0].status == 200) {
         window.location.reload();
     }
@@ -349,13 +355,13 @@ function getIdFromUsername(username: string): number | undefined {
 }
 
 async function assetAssignToUser(id: string): Promise<void> {
-    const user: HTMLElement = document.getElementById('users')!;
-    const userId: number | undefined = getIdFromUsername(user!.value);
-    const apiBody : object = {
+    const user: string | null = document.getElementById('users')!.nodeValue;
+    const userId: number | undefined = getIdFromUsername(user!!);
+    const apiBody: object = {
         "assetId": id,
         "userId": userId
     }
-    const responseDataArray  = await executePostApi(assetAssignApi,apiBody);
+    const responseDataArray = await executePostApi(assetAssignApi, apiBody);
     if (responseDataArray[0].status == 201) {
         window.location.reload();
     }
@@ -411,16 +417,16 @@ async function openAsset(asset: IAsset): Promise<void> {
 
 async function assetUnassign(id: string): Promise<void> {
     const unassignAssetApi: string = assetUnassignApi + `${id}`;
-    await executePostApi(unassignAssetApi,{});
+    await executePostApi(unassignAssetApi, {});
     window.location.reload();
 }
 
 async function requestAsset(assetId: number): Promise<void> {
-    const apiHeaders : object = {
+    const apiHeaders: object = {
         "Content-Type": "application/json",
         "Authorization": `${localStorage.getItem('token')}`
     }
-    const responseDataArray = await executePostApi(assetRequestApi,{assetId},apiHeaders);
+    const responseDataArray = await executePostApi(assetRequestApi, {assetId}, apiHeaders);
 
     if (!responseDataArray[0].ok) {
         alert(responseDataArray[1].message);

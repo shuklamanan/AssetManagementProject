@@ -26,7 +26,7 @@ const loginForm : HTMLFormElement = <HTMLFormElement>document.getElementById('lo
 loginForm.addEventListener("submit", async (e: Event): Promise<void> => {
     e.preventDefault();
     const formData: FormData = new FormData(loginForm);
-    const formValues : object = Object.fromEntries(formData);
+    const formValues : { [k:string] : FormDataEntryValue } = Object.fromEntries(formData);
     const body : IBodyStructureForAPI = {
         username:formValues.username,
         password:formValues.password

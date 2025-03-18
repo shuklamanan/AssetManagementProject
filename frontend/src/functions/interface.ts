@@ -42,19 +42,19 @@ export interface IAssetHistory {
 }
 
 export interface IBodyStructureForAPI{
-    username : string,
-    password : string,
+    username : FormDataEntryValue,
+    password : FormDataEntryValue,
 }
 
 export interface IBodyStructureForUserAPI{
-    username : string,
-    firstName : string,
-    lastName : string,
-    email : string,
+    username : FormDataEntryValue,
+    firstName : FormDataEntryValue,
+    lastName : FormDataEntryValue,
+    email : FormDataEntryValue,
     role? : string[],
-    password : string,
-    phoneNumber : number,
-    dateOfBirth : string,
+    password : FormDataEntryValue,
+    phoneNumber : FormDataEntryValue | number,
+    dateOfBirth : FormDataEntryValue,
 }
 
 export interface ILoginToken{
@@ -63,7 +63,7 @@ export interface ILoginToken{
 }
 
 export interface IForgetPassword{
-    username:string
+    username:FormDataEntryValue
 }
 
 export interface IForgetPasswordToken{
@@ -72,8 +72,8 @@ export interface IForgetPasswordToken{
 }
 
 export interface IResetPassword{
-    otp:number,
-    password:string,
-    confirmPassword:string,
-    username:string
+    otp:FormDataEntryValue,
+    password:FormDataEntryValue,
+    confirmPassword:FormDataEntryValue,
+    username:FormDataEntryValue
 }

@@ -14,7 +14,7 @@ import {executeQuery, handleError, handleSuccess} from "../functions/requestResp
 
 dotenv.config()
 
-const generateToken = (payload: JwtPayload,time:number) => {
+const generateToken = (payload: JwtPayload,time:string) => {
     const secretKey: string = process.env.ACCESS_TOKEN_SECRET ?? ""; // Replace with your own secret key
     const options = {
         expiresIn: time,
@@ -82,7 +82,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
     };
     await storeOTP(username, otp);
     await redisClient.setEx(`tempUser:${username}`, 300, JSON.stringify(tempUser));
-    let token:string = generateToken({username:username},86400)
+    let token:string = generateToken({username:username},'24h')
     await mailOTP(otp,email,"OTP verification")
     res.status(200).json({OTPtoken:token});
 };
@@ -104,7 +104,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         return
     }
     let payload: JwtPayload = {id: user.id}
-    let token: string = generateToken(payload,86400)
+    let token: string = generateToken(payload,'24h')
     res.status(200).json({token: token});
     return;
 };

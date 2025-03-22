@@ -24,7 +24,7 @@ async function postRequest(api:string,body: { otp:number }):Promise<void>{
 const registrationForm: HTMLFormElement = <HTMLFormElement>document.getElementById("registrationForm");
 registrationForm.addEventListener("submit", async(e : Event) :Promise<void> => {
     e.preventDefault();
-    const getOTP : string | null = document.getElementById("otp")!.nodeValue
+    const getOTP : string | null = (<HTMLInputElement>document.getElementById("otp")).value
     let otp:number = Number(getOTP)
     await postRequest(verifyUserViaOtpApi, {otp:otp});
 })

@@ -1,56 +1,15 @@
 version: '1.0'
 services:
-  frontend:
-    build: ./frontend
-    container_name: client_frontend
-    ports:
-      - 5173:5173
-    depends_on:
-      - backend
-
-  backend:
-    build: ./backend
-    container_name: api_backend
-    ports:
-      - 5001:5001
-    depends_on:
-      - postgres
-      - rabbitmq
-      - mailhog
-      - redis
-    environment:
-      RABBITMQ_URL: amqp://rabbitmq
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
 
   user_notification_consumer:
     build: ./backend
     container_name: user_notification_consumer
     command: [ "npm", "run","devConsumerUser"]
-    depends_on:
-      - rabbitmq
-    environment:
-      RABBITMQ_URL: amqp://rabbitmq
 
   asset_notification_consumer:
     build: ./backend
     container_name: asset_notification_consumer
     command: [ "npm", "run", "devConsumerAsset" ]
-    depends_on:
-      - rabbitmq
-    environment:
-      RABBITMQ_URL: amqp://rabbitmq
-
-  postgres:
-    image: postgres:13-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: asset-management
-    ports:
-      - 9000:5432
-    volumes:
-      - pgAssetManagement:/var/lib/postgresql/data
 
   mailhog:
     container_name: mailhog
@@ -58,22 +17,6 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"      # RabbitMQ port for communication
-      - "15672:15672"    # RabbitMQ management dashboard
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-
-  redis:
-    image: redis:alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
 
 volumes:
   pgAssetManagement:

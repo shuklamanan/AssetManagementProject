@@ -4,13 +4,13 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const redisClient = createClient({
-    url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+    url: process.env.REDIS_URL!!,
 });
 
 async function connectToDatabase() {
     try {
         await redisClient.connect();
-        console.log("connected db successfully.");
+        console.log("redis connected successfully.");
     } catch (error: any) {
         console.log(error.message);
     }

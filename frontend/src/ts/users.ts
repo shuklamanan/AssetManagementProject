@@ -13,7 +13,7 @@ if (!roles.includes("Admin")) {
     location.href = '/src/html/index.html'
 }
 displayUsers(users)
-console.log(users)
+console.log("users",users)
 
 async function deleteUser(user: IUser): Promise<void> {
     const deleteUser: string = deleteUserApi + `${user.id}`;
@@ -52,8 +52,8 @@ addUserForm.addEventListener("submit", async (e: Event): Promise<void> => {
     e.preventDefault();
     const formData: FormData = new FormData(addUserForm);
     const formValues: { [k: string]: FormDataEntryValue } = Object.fromEntries(formData);
-    const getRole: HTMLElement = document.getElementById('role')!;
-    const roleValue: string | null = getRole!.nodeValue;
+    const getRole = document.getElementById('role')! as HTMLSelectElement;
+    const roleValue: string | null = getRole.value;
     if ((formValues.phoneNumber).toString().length != 10 || parseInt(<string>formValues.phoneNumber) < 0) {
         alert("Please enter a valid phone number");
         location.reload();

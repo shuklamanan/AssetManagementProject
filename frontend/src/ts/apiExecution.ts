@@ -5,7 +5,7 @@ export async function executeGetApi(api:string,apiHeaders?:any) : Promise<any>{
         headers: apiHeaders??headers,
     });
     const data:any = await response.json();
-    console.log(data);
+    console.log(data,data);
     if(data.message == "user not found"){
         localStorage.removeItem('token');
         location.href = "/src/html/login.html";
@@ -20,6 +20,7 @@ export async function executePostApi(api:string,body:any,apiHeaders?:any) : Prom
         body: JSON.stringify(body),
     });
     const data:any = await response.json();
+    console.log(data);
     return [response,data];
 }
 

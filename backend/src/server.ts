@@ -15,6 +15,7 @@ import {messageRoutes} from "./routes/messages.ts";
 // maybe use redis for caching layer as well use another db for storing just these temparary users as well
 dotenv.config()
 const app = express();
+app.use(express.json());
 app.use(cors());
 app.use(express.json());
 

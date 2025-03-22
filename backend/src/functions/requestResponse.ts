@@ -1,4 +1,5 @@
 import {Response} from "express";
+// @ts-ignore
 import client from "../../postgresConfig.ts"
 
 export const handleError = (res:Response,statusCode:number,message:string):void=>{
@@ -11,6 +12,7 @@ export const handleSuccess = (res:Response,statusCode:number,message?:string,dat
         res.status(statusCode).json({message:message})
     }
     else{
+        console.log("print here",statusCode, message , data);
         res.status(statusCode).json(data);
     }
     return;

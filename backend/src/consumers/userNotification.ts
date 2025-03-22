@@ -1,16 +1,17 @@
+// @ts-ignore
 import amqp from 'amqplib';
 import mailUser from "../functions/mailUser";
 
 async function consumeUserNotifications() {
     try {
-        const connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://rabbitmq');
+        const connection = await amqp.connect(process.env.RABBITMQ_URL!!);
         const channel = await connection.createChannel();
         const queue = 'user_notification_queue';
 
         await channel.assertQueue(queue, { durable: true });
         console.log(`Listening to ${queue}...`);
 
-        channel.consume(queue, async (message) => {
+        await channel.consume(queue, async (message) => {
             if (message) {
                 const notificationData = JSON.parse(message.content.toString());
                 await mailUser(

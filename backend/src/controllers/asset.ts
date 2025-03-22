@@ -23,6 +23,7 @@ export const createAssets = async (req: Request, res: Response): Promise<void> =
         userId
     } = req.body as ICreateAssetQueryBody;
     if (!(name && assetType && config)) {
+        console.log(name,assetType,config)
         handleError(res,400,"some required fields are missing in request")
         return;
     }

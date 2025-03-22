@@ -13,6 +13,6 @@ export const userRoutes:Router = express.Router();
 userRoutes.use(verifyJwt)
 userRoutes.get('/roles',getRoles)
 userRoutes.get('/profile',getProfileDetails);
-userRoutes.get('/',verifyRole(['Admin']),getAllUsers)
+userRoutes.get('/',getAllUsers)
 userRoutes.post('/',verifyRole(['Admin']),createUserViaAdmin)
 userRoutes.delete('/:id',verifyRole(['Admin']),deleteUser)

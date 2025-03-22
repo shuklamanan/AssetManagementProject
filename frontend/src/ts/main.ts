@@ -49,7 +49,7 @@ async function checkAdminOrNot(): Promise<boolean> {
 let users: IUser[];
 
 async function getDataOfUser(dropdownForUsers: HTMLElement): Promise<void> {
-    let selectTag: HTMLElement = document.createElement('select');
+    let selectTag :HTMLElement = document.createElement('select');
     const responseDataArray = await executeGetApi(getAllUsersApi);
     users = responseDataArray[1];
     selectTag.setAttribute('name', 'users');
@@ -173,7 +173,7 @@ async function displayAssets(assets: IAsset[]): Promise<void> {
 async function openModal(openModalButton: HTMLElement) {
     const dropdownForAssetAssign: HTMLElement = document.createElement('div')
     const addAssetAssetName: HTMLElement = document.getElementById('addAssetAssetName')!;
-    addAssetAssetName.nodeValue = "";
+    addAssetAssetName.textContent = "";
     await getDataOfUser(dropdownForAssetAssign);
     openModalButton!.setAttribute('data-toggle', 'modal');
     openModalButton!.setAttribute('data-target', '#addAssetModal');
@@ -181,13 +181,15 @@ async function openModal(openModalButton: HTMLElement) {
 }
 
 function addAssetAssignDropDown(dropdown: HTMLElement): void {
-    const addAssetDropDownForUsers: HTMLElement = document.getElementById("addAssetDropDownForUsers")!;
+    const addAssetDropDownForUsers = document.getElementById("addAssetDropDownForUsers")! as HTMLSelectElement;
     const tableBody: HTMLElement = document.getElementById('addAssetConfigTableBody')!;
     tableBody.innerHTML = "";
     addAssetDropDownForUsers.innerHTML = "";
     let noUserPresent: boolean = false;
-    (dropdown!.firstChild!.childNodes).forEach(option => {
-        if (option.nodeValue == "noUser") {
+    const firstChild = dropdown.firstChild as HTMLSelectElement
+    (firstChild.childNodes).forEach(op => {
+        const option = op as HTMLOptionElement
+        if (option.value == "noUser") {
             noUserPresent = true;
         }
     })
@@ -217,19 +219,20 @@ function addRow(): void {
 
 async function addAsset(dropdown: HTMLElement): Promise<void> {
     const getConfigDetail = document.getElementsByTagName('input');
-    const assetType: HTMLElement = document.getElementById('assetType')!;
+    const assetType = document.getElementById('assetType')! as HTMLSelectElement;
     let configObj: Record<string, string> = {};
     for (let i: number = 1; i < getConfigDetail.length; i += 2) {
-        configObj[getConfigDetail[i].nodeValue!!] = getConfigDetail[i + 1].nodeValue!!;
+        configObj[getConfigDetail[i].value] = getConfigDetail[i + 1].value;
     }
-    const assignUser: string | null | undefined = (dropdown!.firstChild!.nodeValue == "noUser") ? undefined : dropdown!.firstChild!.nodeValue;
+    const firstChild = dropdown.firstChild! as HTMLSelectElement
+    const assignUser: string | null | undefined = (firstChild.value == "noUser") ? undefined : firstChild.value;
     const addAssetApiBody: Record<string, string | Record<string, string>> = {
-        "name": getConfigDetail[0].nodeValue!!,
-        "assetType": assetType.nodeValue!!,
+        "name": getConfigDetail[0].value,
+        "assetType": assetType.value,
         "config": configObj
     }
     if (assignUser) {
-        const userId: number | undefined = getIdFromUsername(dropdown!.firstChild!.nodeValue!!);
+        const userId: number | undefined = getIdFromUsername(firstChild.value);
         addAssetApiBody["userId"] = userId!.toString();
     }
     const responseDataArray = await executePostApi(createAssetApi, addAssetApiBody);
@@ -289,19 +292,19 @@ function addRowInEditSection(): void {
 
 async function saveAssetDetails(tableBody: HTMLElement): Promise<void> {
     const id: string = document.getElementById('modalAssetId')!.textContent!;
-    const name: HTMLElement = document.getElementById('editAssetName')!;
-    const assetType: HTMLElement = document.getElementById('editAssetType')!;
-    const editAssetConfigDetails: HTMLCollectionOf<Element> = tableBody.getElementsByTagName('input');
+    const name = document.getElementById('editAssetName')! as HTMLInputElement;
+    const assetType = document.getElementById('editAssetType')! as HTMLInputElement;
+    const editAssetConfigDetails: HTMLCollectionOf<HTMLInputElement> = tableBody.getElementsByTagName('input');
     const assignedAssetOrNot: HTMLElement = document.getElementById('modalAssetOwner')!;
     let configObj: Record<string, string> = {};
     for (let i: number = 0; i < editAssetConfigDetails.length; i += 2) {
-        if (editAssetConfigDetails[i].nodeValue!!.trim().length && editAssetConfigDetails[i + 1].nodeValue!!.trim().length) {
-            configObj[editAssetConfigDetails[i].nodeValue!!] = editAssetConfigDetails[i + 1].nodeValue!!;
+        if (editAssetConfigDetails[i].value.trim().length && editAssetConfigDetails[i + 1].value.trim().length) {
+            configObj[editAssetConfigDetails[i].value] = editAssetConfigDetails[i + 1].value;
         }
     }
     let editAssetApiBody: Record<string, string | Record<string, string>> = {
-        "name": name.nodeValue!!,
-        "assetType": assetType.nodeValue!!,
+        "name": name.value,
+        "assetType": assetType.value,
         "config": configObj
     };
     if (assignedAssetOrNot.textContent != 'Unassigned') {
@@ -355,7 +358,7 @@ function getIdFromUsername(username: string): number | undefined {
 }
 
 async function assetAssignToUser(id: string): Promise<void> {
-    const user: string | null = document.getElementById('users')!.nodeValue;
+    const user: string | null = (<HTMLSelectElement>document.getElementById('users')).value;
     const userId: number | undefined = getIdFromUsername(user!!);
     const apiBody: object = {
         "assetId": id,

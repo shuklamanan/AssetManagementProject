@@ -8,6 +8,7 @@ import {isValidPassword} from "../functions/validPassword";
 import {isValidEmail} from "../functions/isValidEmail.ts";
 import mailOTP from "../functions/mailOTP.ts";
 import {hashPassword} from "../functions/hashPassword.ts";
+// @ts-ignore
 import redisClient from "../../redisConfig.ts";
 import {executeQuery, handleError, handleSuccess} from "../functions/requestResponse.ts";
 

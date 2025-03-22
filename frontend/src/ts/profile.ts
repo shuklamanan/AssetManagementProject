@@ -6,6 +6,7 @@ const logoutElement:HTMLElement = document.getElementById("logout")!;
 isTokenAvailableOrNot()
 
 const roles: string[] = await fetchUserRoles();
+console.log(roles)
 displayContentBasedOnRoles(roles);
 
 async function fetchUserProfile() : Promise<void> {

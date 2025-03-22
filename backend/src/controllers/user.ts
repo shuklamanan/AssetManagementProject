@@ -8,7 +8,8 @@ import {executeQuery, handleError, handleSuccess} from "../functions/requestResp
 
 export const getRoles = async (req: Request, res: Response): Promise<void> => {
     try {
-        handleSuccess(res,200,'',req.body.user.role.substring(1, req.body.user.role.length - 1).split(","))
+        console.log("----> ",req.body.user)
+        handleSuccess(res,200,'',req.body.user.role)
         return
     } catch (error: any) {
         handleError(res,500,error?.message)
@@ -83,9 +84,11 @@ export const createUserViaAdmin = async (req: Request, res: Response): Promise<v
         return;
     }
     await executeQuery("insert into users(username, first_name, last_name, role, email, password, phone_number, department, date_of_birth) values ($1,$2,$3,$9,$4,$5,$6,$7,$8)", [username, firstName, lastName, email, await hashPassword(password), phoneNumber, department ?? null, dateOfBirth ?? null, role],res)
+    console.log(`${req.body}`)
+    console.log(`created successfully ${role}`)
     await publishUserNotification({
         email: email,
-        subject:   "Creation of account by admin",
+        subject: "Creation of account by admin",
         username: username,
         firstName: firstName,
         lastName: lastName,

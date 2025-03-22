@@ -18,7 +18,7 @@ const generateToken = (payload: JwtPayload,time:string) => {
     const secretKey: string = process.env.ACCESS_TOKEN_SECRET ?? ""; // Replace with your own secret key
     const options = {
         expiresIn: time,
-    };
+    } as jwt.SignOptions;
     return jwt.sign(payload, secretKey, options);
 };
 

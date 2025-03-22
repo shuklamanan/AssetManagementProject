@@ -15,7 +15,7 @@ import {executeQuery, handleError, handleSuccess} from "../functions/requestResp
 dotenv.config()
 
 const generateToken = (payload: JwtPayload,time:string) => {
-    const secretKey: string = process.env.ACCESS_TOKEN_SECRET ?? ""; // Replace with your own secret key
+    const secretKey: string = process.env.ACCESS_TOKEN_SECRET!! ?? "secret_key_of_jwt";
     const options = {
         expiresIn: time,
     } as jwt.SignOptions;

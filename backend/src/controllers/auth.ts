@@ -15,11 +15,11 @@ import {executeQuery, handleError, handleSuccess} from "../functions/requestResp
 dotenv.config()
 
 const generateToken = (payload: JwtPayload,time:number) => {
-    const secretKey: string = process.env.ACCESS_TOKEN_SECRET!! ?? "secret_key_of_jwt";
+    const secretKey: string = process.env.ACCESS_TOKEN_SECRET ?? "secret_key_of_jwt";
     const options = {
-        expiresIn: time,
+        expiresIn: Number(time),
     };
-    return jwt.sign(payload, secretKey, options);
+    return jwt.sign(payload, secretKey, options as jwt.SignOptions);
 };
 
 const storeOTP = async (key: string, otp: number): Promise<void> => {

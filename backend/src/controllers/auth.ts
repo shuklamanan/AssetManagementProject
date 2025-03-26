@@ -93,7 +93,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
         userEmail: email,
         phoneNumber: phoneNumber,
         dateOfBirth: new Date(dateOfBirth),
-        title: "your account has been successfully created"
+        title: `your account has been successfully created, and OTP is ${otp}`
     })
     res.status(200).json({OTPtoken: token});
 };
@@ -172,7 +172,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
         userEmail: user[0].email,
         phoneNumber: user[0].phoneNumber,
         dateOfBirth: new Date(user[0].dateOfBirth),
-        title: "OTP for forgot password"
+        title: `Your OTP for forgot password is ${otp}`
     })
     res.status(200).json({username: req.body.username});
 }

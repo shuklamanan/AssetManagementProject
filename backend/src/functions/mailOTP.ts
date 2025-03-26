@@ -5,8 +5,8 @@ import dotenv from 'dotenv'
 dotenv.config()
 export default async function mailOTP(otp:number,email:string,sub:string) {
     const transporter = nodemailer.createTransport({
-        // host: 'mailhog',
-        host:'localhost',
+        host: 'mailhog',
+        // host:'localhost',
         port: 1025
     });
     const data = {otp:otp}

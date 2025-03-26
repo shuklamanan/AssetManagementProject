@@ -11,10 +11,11 @@ import {hashPassword} from "../functions/hashPassword.ts";
 // @ts-ignore
 import redisClient from "../../redisConfig.ts";
 import {executeQuery, handleError, handleSuccess} from "../functions/requestResponse.ts";
+import {publishUserNotification} from "../publishers/mailUser.ts";
 
 dotenv.config()
 
-const generateToken = (payload: JwtPayload,time:number) => {
+const generateToken = (payload: JwtPayload, time: number) => {
     const secretKey: string = process.env.ACCESS_TOKEN_SECRET ?? "secret_key_of_jwt";
     const options = {
         expiresIn: Number(time),
@@ -41,17 +42,17 @@ const deleteOTP = async (key: string): Promise<void> => {
 //if we have used redis or something similar this would be much more efficient but this works fine as well
 export const createUser = async (req: Request, res: Response): Promise<void> => {
     let {
-            username,
-            firstName,
-            lastName,
-            email,
-            password,
-            phoneNumber,
-            department,
-            dateOfBirth
+        username,
+        firstName,
+        lastName,
+        email,
+        password,
+        phoneNumber,
+        department,
+        dateOfBirth
     } = req.body as ICreateUserQueryBody;
     if (!isValidPassword(password)) {
-        handleError(res,400,`Password should contain:-\n' +
+        handleError(res, 400, `Password should contain:-\n' +
                     '                    It contains at least 8 characters and at most 20 characters.\n' +
                     '                    It contains at least one digit.\n' +
                     '                    It contains at least one upper case alphabet.\n' +
@@ -61,11 +62,11 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
         return
     }
     if (!(username && email && password && firstName && lastName && phoneNumber)) {
-        handleError(res,400,"some required fields are missing in request");
+        handleError(res, 400, "some required fields are missing in request");
         return;
     }
-    if (!isValidEmail(email, process.env.DOMAIN??'gmail')) {
-        handleError(res,400,`only domail name ${process.env.DOMAIN} is allowed`)
+    if (!isValidEmail(email, process.env.DOMAIN ?? 'gmail')) {
+        handleError(res, 400, `only domain name ${process.env.DOMAIN} is allowed`)
         return;
     }
     const otp = generateOTP(4)
@@ -82,47 +83,57 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
     };
     await storeOTP(username, otp);
     await redisClient.setEx(`tempUser:${username}`, 300, JSON.stringify(tempUser));
-    let token:string = generateToken({username:username},86400)
-    await mailOTP(otp,email,"OTP verification")
-    res.status(200).json({OTPtoken:token});
+    let token: string = generateToken({username: username}, 86400)
+    await publishUserNotification({
+        email: email,
+        subject: "OTP Verification",
+        username: username,
+        firstName: firstName,
+        lastName: lastName,
+        userEmail: email,
+        phoneNumber: phoneNumber,
+        dateOfBirth: new Date(dateOfBirth),
+        title: "your account has been successfully created"
+    })
+    res.status(200).json({OTPtoken: token});
 };
 
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
-    let {username, password} : ILoginUserRequestBody= req.body
+    let {username, password}: ILoginUserRequestBody = req.body
     if (!(username && password)) {
-        handleError(res,400,"some fields are missing in request")
+        handleError(res, 400, "some fields are missing in request")
         return
     }
-    let response: ICreateUserRequestBody[] = (await executeQuery("select * from users where username=$1 and archived_at is null", [username],res)).rows
+    let response: ICreateUserRequestBody[] = (await executeQuery("select * from users where username=$1 and archived_at is null", [username], res)).rows
     if (!response.length) {
-        handleError(res,404,"user not found")
+        handleError(res, 404, "user not found")
         return
     }
     let user: ICreateUserRequestBody = response[0]
-    if (!bcrypt.compareSync(password, user.password??"")) {
-        handleError(res,401,"user auth failed incorrect username or password")
+    if (!bcrypt.compareSync(password, user.password ?? "")) {
+        handleError(res, 401, "user auth failed incorrect username or password")
         return
     }
     let payload: JwtPayload = {id: user.id}
-    let token: string = generateToken(payload,86400)
+    let token: string = generateToken(payload, 86400)
     res.status(200).json({token: token});
     return;
 };
 
 export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
-    let username:string = req.body.username
-    let otp:number = Number(req.body.otp)
-    const storedOTP:string |null = await getOTP(username);
+    let username: string = req.body.username
+    let otp: number = Number(req.body.otp)
+    const storedOTP: string | null = await getOTP(username);
     if (!storedOTP || Number(storedOTP) != otp) {
-        handleError(res,400,"invalid or expired OTP")
+        handleError(res, 400, "invalid or expired OTP")
         return
     }
     const userString = await redisClient.get(`tempUser:${username}`);
     if (!userString) {
-        handleError(res,400,"user data expired or not found")
+        handleError(res, 400, "user data expired or not found")
         return;
     }
-    const user:ICreateUserRequestBody = JSON.parse(userString);
+    const user: ICreateUserRequestBody = JSON.parse(userString);
     await executeQuery('INSERT INTO users(username, first_name, last_name, role, email, password, phone_number, department, date_of_birth) VALUES ($1, $2, $3, ARRAY [\'Employee\']::role[], $4, $5, $6, $7, $8)',
         [
             user.username,
@@ -133,40 +144,50 @@ export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
             user.phone_number,
             user.department,
             user.date_of_birth,
-        ],res
+        ], res
     );
     await deleteOTP(username);
     await redisClient.del(`tempUser:${username}`);
-    handleSuccess(res,200,"signup successful");
+    handleSuccess(res, 200, "signup successful");
 };
 
-export const forgotPassword = async (req:Request, res:Response):Promise<void>=>{
-    if(!req.body.username){
-        handleError(res,404,"username is not found")
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+    if (!req.body.username) {
+        handleError(res, 404, "username is not found")
         return
     }
-    const user = (await executeQuery("SELECT * FROM users WHERE archived_at IS NULL AND username = $1",[req.body.username],res)).rows;
-    if(!user.length) {
-        handleError(res,404,"user not found");
+    const user = (await executeQuery("SELECT * FROM users WHERE archived_at IS NULL AND username = $1", [req.body.username], res)).rows;
+    if (!user.length) {
+        handleError(res, 404, "user not found");
         return;
     }
-    const otp:number = generateOTP(4)
+    const otp: number = generateOTP(4)
     await storeOTP(user[0].username, otp);
-    await mailOTP(otp,user[0].email,"Password Reset")
-    res.status(200).json({username:req.body.username});
+    await publishUserNotification({
+        email: user[0].email,
+        subject: "OTP Verification",
+        username: user[0].username,
+        firstName: user[0].firstName,
+        lastName: user[0].lastName,
+        userEmail: user[0].email,
+        phoneNumber: user[0].phoneNumber,
+        dateOfBirth: new Date(user[0].dateOfBirth),
+        title: "OTP for forgot password"
+    })
+    res.status(200).json({username: req.body.username});
 }
 
-export const resetPassword = async (req:Request,res:Response):Promise<void>=>{
-    const otp:number=parseInt(req.body.otp);
-    const password :string= req.body.password.trim();
-    const confirmPassword:string = req.body.confirmPassword.trim();
-    const username:string = req.body.username;
-    if(!password || !confirmPassword || password!=confirmPassword){
-        handleError(res,400,"Bith passwords do not match")
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+    const otp: number = parseInt(req.body.otp);
+    const password: string = req.body.password.trim();
+    const confirmPassword: string = req.body.confirmPassword.trim();
+    const username: string = req.body.username;
+    if (!password || !confirmPassword || password != confirmPassword) {
+        handleError(res, 400, "Bith passwords do not match")
         return;
     }
     if (!isValidPassword(password)) {
-        handleError(res,400,`Password should contain:-\n' +
+        handleError(res, 400, `Password should contain:-\n' +
                    '                    It contains at least 8 characters and at most 20 characters.\n' +
                    '                    It contains at least one digit.\n' +
                    '                    It contains at least one upper case alphabet.\n' +
@@ -176,12 +197,12 @@ export const resetPassword = async (req:Request,res:Response):Promise<void>=>{
         return
     }
     console.log(req.body);
-    const storedOTP:string|null = await getOTP(username);
-    if(otp!=Number(storedOTP)){
-        handleError(res,400,"Password reset is failed")
+    const storedOTP: string | null = await getOTP(username);
+    if (otp != Number(storedOTP)) {
+        handleError(res, 400, "Password reset is failed")
         return;
     }
     await deleteOTP(username);
-    await executeQuery("UPDATE users SET password = $1 WHERE archived_at IS NULL AND username=$2",[await hashPassword(password),req.body.username],res);
-    handleSuccess(res,200,"Password reset successful")
+    await executeQuery("UPDATE users SET password = $1 WHERE archived_at IS NULL AND username=$2", [await hashPassword(password), req.body.username], res);
+    handleSuccess(res, 200, "Password reset successful")
 }
